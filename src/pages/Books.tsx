@@ -10,52 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
-import { useAuth } from "react-oidc-context";
-import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import React from "react";
-
-// Mock shelves (copied from Shelves.tsx)
-const shelves = [
-  { id: 1, title: "Documentation technique" },
-  { id: 2, title: "Guides utilisateur" },
-  { id: 3, title: "Procédures internes" },
-  { id: 4, title: "Formation" },
-  { id: 5, title: "Architecture" },
-  { id: 6, title: "Ressources Marketing" },
-];
-
-// Extend the User type to include OIDC user properties
-interface OidcUser {
-  name?: string;
-  email?: string;
-  [key: string]: any;
-}
+import { CreateBookDialog } from "@/components/CreateBookDialog";
 
 export default function Books() {
-  const auth = useAuth();
-  const user = auth.user as OidcUser;
-  const { toast } = useToast();
-  // Move books to state
-  const [books, setBooks] = useState([
+  const books = [
     {
       id: 1,
       title: "Guide de démarrage React",
@@ -116,61 +74,7 @@ export default function Books() {
       lastUpdated: "Il y a 2 jours",
       color: "bg-pink-100 text-pink-800",
     },
-  ]);
-
-  // Dialog and form state
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    shelf: shelves[0].title,
-    author: user?.name || "Utilisateur",
-  });
-  const [loading, setLoading] = useState(false);
-
-  // Update author if user changes (keep value if dialog is closed)
-  React.useEffect(() => {
-    setForm((f) => ({
-      ...f,
-      author: user?.name || "Utilisateur",
-    }));
-    // eslint-disable-next-line
-  }, [user]);
-
-  // Handle form field changes
-  const handleChange = (field: string, value: string) => {
-    setForm((f) => ({ ...f, [field]: value }));
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setBooks((prev) => [
-        {
-          id: prev.length + 1,
-          title: form.title,
-          description: form.description,
-          author: form.author,
-          shelf: form.shelf,
-          pageCount: 0, // page management not implemented
-          lastUpdated: "À l'instant",
-          color: "bg-blue-100 text-blue-800", // default color, could be improved
-        },
-        ...prev,
-      ]);
-      setLoading(false);
-      setOpen(false);
-      toast({
-        title: "Livre créé",
-        description: `Le livre '${form.title}' a été ajouté avec succès.`,
-        duration: 3000,
-      });
-      // Keep form values (do not reset)
-    }, 1000);
-  };
+  ];
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -181,74 +85,16 @@ export default function Books() {
             Consultez et gérez tous vos livres de documentation
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-accent hover:bg-accent/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau livre
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Créer un nouveau livre</DialogTitle>
-              <DialogDescription>
-                Remplissez les informations pour ajouter un livre à votre
-                documentation.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Titre</label>
-                <Input
-                  value={form.title}
-                  onChange={(e) => handleChange("title", e.target.value)}
-                  required
-                  placeholder="Titre du livre"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Description
-                </label>
-                <Input
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  required
-                  placeholder="Description du livre"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Étagère
-                </label>
-                <Select
-                  value={form.shelf}
-                  onValueChange={(v) => handleChange("shelf", v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir une étagère" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shelves.map((shelf) => (
-                      <SelectItem key={shelf.id} value={shelf.title}>
-                        {shelf.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Auteur</label>
-                <Input value={form.author} readOnly disabled />
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? "Création..." : "Créer"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <CreateBookDialog
+          buttonClassName="flex items-center gap-2 bg-accent hover:bg-accent/90"
+          buttonVariant="default"
+          buttonChildren={
+            <>
+              <Book className="h-5 w-5" />
+              <span>Nouveau livre</span>
+            </>
+          }
+        />
       </div>
 
       {/* Barre de recherche */}
@@ -342,7 +188,6 @@ export default function Books() {
           </Button>
         </div>
       )}
-      <Toaster />
     </div>
   );
 }

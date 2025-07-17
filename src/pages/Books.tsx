@@ -1,10 +1,10 @@
-
 import { Book, Plus, Search, Calendar } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { useState } from "react"
 
 export default function Books() {
   const books = [
@@ -70,8 +70,28 @@ export default function Books() {
     }
   ]
 
+  const [bookList, setBookList] = useState(books);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-6 animate-fade-in relative">
+      {/* Custom Modal for Delete Confirmation */}
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold mb-4">Confirmer la suppression</h2>
+            <p className="mb-6 text-muted-foreground">Êtes-vous sûr de vouloir supprimer ce livre ? Cette action est irréversible.</p>
+            <div className="flex justify-center gap-4">
+              <Button variant="destructive" onClick={() => { setBookList(bookList.filter(b => b.id !== confirmDeleteId)); setConfirmDeleteId(null); }}>
+                Supprimer
+              </Button>
+              <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Livres</h1>
@@ -96,7 +116,7 @@ export default function Books() {
 
       {/* Liste des livres */}
       <div className="space-y-4">
-        {books.map((book) => (
+        {bookList.map((book) => (
           <Card key={book.id} className="hover:shadow-md transition-all duration-200">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -151,6 +171,9 @@ export default function Books() {
                       Modifier
                     </Link>
                   </Button>
+                  <Button variant="destructive" size="sm" onClick={() => setConfirmDeleteId(book.id)}>
+                    Supprimer livre
+                  </Button>
                 </div>
                 <Link 
                   to={`/shelves/${book.id}`}
@@ -165,7 +188,7 @@ export default function Books() {
       </div>
 
       {/* État vide */}
-      {books.length === 0 && (
+      {bookList.length === 0 && (
         <div className="text-center py-12">
           <Book className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">

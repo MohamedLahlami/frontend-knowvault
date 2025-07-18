@@ -1,7 +1,7 @@
 export interface Book {
     id: number;
     bookTitle: string;
-    utilisateurId: string; // UUID → string
+    utilisateurLogin: string;
     shelfId: number;
     pageCount: number;
 }

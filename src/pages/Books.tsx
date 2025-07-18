@@ -14,7 +14,11 @@ import { CreateBookDialog } from "@/components/CreateBookDialog";
 import { useBooks } from "@/hooks/useBooks";
 
 export default function Books() {
-  const { books, loading, error } = useBooks();
+  const { books, loading, error, refetchBooks } = useBooks();
+
+  const handleBookCreated = () => {
+    refetchBooks();
+  };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -34,6 +38,7 @@ export default function Books() {
               <span>Nouveau livre</span>
             </>
           }
+          onBookCreated={handleBookCreated}
         />
       </div>
 
@@ -127,6 +132,7 @@ export default function Books() {
                     Créer un livre
                   </>
                 }
+                onBookCreated={handleBookCreated}
               />
             </div>
           )}

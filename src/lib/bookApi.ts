@@ -1,15 +1,17 @@
 import { apiService } from "@/lib/api";
 import { Book } from "@/types/book.ts";
 
-export const getBooks = async (): Promise<Book[]> => {
+export const getBooks = async (token: string): Promise<Book[]> => {
   return await apiService.get<Book[]>("/api/book", {
-    requireAuth: false, // change à true si l'endpoint est sécurisé
+    requireAuth: true,
+    token,
   });
 };
 
 export const createBook = async (
   bookTitle: string,
-  shelfId: number
+  shelfId: number,
+  token: string
 ): Promise<Book> => {
   return await apiService.post<Book>(
     "/api/book",
@@ -18,7 +20,8 @@ export const createBook = async (
       shelfId,
     },
     {
-      requireAuth: false, // change to true if endpoint is secured
+      requireAuth: true,
+      token,
     }
   );
 };

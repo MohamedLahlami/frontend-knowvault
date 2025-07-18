@@ -11,70 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CreateBookDialog } from "@/components/CreateBookDialog";
+import { useBooks } from "@/hooks/useBooks";
+
 
 export default function Books() {
-  const books = [
-    {
-      id: 1,
-      title: "Guide de démarrage React",
-      description: "Introduction complète au développement avec React",
-      author: "Équipe Documentation",
-      shelf: "Documentation technique",
-      pageCount: 24,
-      lastUpdated: "Il y a 2 heures",
-      color: "bg-blue-100 text-blue-800",
-    },
-    {
-      id: 2,
-      title: "Bonnes pratiques JavaScript",
-      description: "Conventions et bonnes pratiques pour JavaScript moderne",
-      author: "Équipe Dev",
-      shelf: "Documentation technique",
-      pageCount: 18,
-      lastUpdated: "Hier",
-      color: "bg-green-100 text-green-800",
-    },
-    {
-      id: 3,
-      title: "Manuel utilisateur CRM",
-      description: "Guide complet d'utilisation du système CRM",
-      author: "Support Client",
-      shelf: "Guides utilisateur",
-      pageCount: 32,
-      lastUpdated: "Il y a 3 jours",
-      color: "bg-purple-100 text-purple-800",
-    },
-    {
-      id: 4,
-      title: "Procédure d'onboarding",
-      description: "Processus d'intégration des nouveaux employés",
-      author: "RH",
-      shelf: "Procédures internes",
-      pageCount: 12,
-      lastUpdated: "Il y a 1 semaine",
-      color: "bg-orange-100 text-orange-800",
-    },
-    {
-      id: 5,
-      title: "Architecture microservices",
-      description: "Guide d'architecture pour les microservices",
-      author: "Tech Lead",
-      shelf: "Architecture",
-      pageCount: 28,
-      lastUpdated: "Il y a 5 jours",
-      color: "bg-red-100 text-red-800",
-    },
-    {
-      id: 6,
-      title: "Formation TypeScript",
-      description: "Cours complet sur TypeScript pour débutants",
-      author: "Formateur",
-      shelf: "Formation",
-      pageCount: 45,
-      lastUpdated: "Il y a 2 jours",
-      color: "bg-pink-100 text-pink-800",
-    },
-  ];
+    const { books, loading, error } = useBooks();
 
   const [bookList, setBookList] = useState(books);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);

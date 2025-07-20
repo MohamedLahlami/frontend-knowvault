@@ -18,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import Shelves from "./pages/Shelves";
 import Books from "./pages/Books";
 import NotFound from "./pages/NotFound";
+import BookDetails from "./pages/BookDetails";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,14 @@ const App = () => (
                     <Books />
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+                path="/books/:id"
+                element={
+                  <ProtectedRoute>
+                    <BookDetails/>
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/search" 

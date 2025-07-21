@@ -77,7 +77,7 @@ export default function Books() {
                           </Link>
                         </CardTitle>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Utilisateur ID: {book.utilisateurId}</span>
+                          <span>Utilisateur ID: {book.utilisateurLogin}</span>
                           <Badge variant="secondary">
                             Étagère #{book.shelfId}
                           </Badge>

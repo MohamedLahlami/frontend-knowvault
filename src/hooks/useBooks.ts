@@ -37,12 +37,12 @@ export const useBooks = () => {
   const addBook = async (bookTitle: string, shelfId: number) => {
     if (!token) throw new Error("No authentication token available");
     // Use user info for utilisateurId
-    const utilisateurId =
+    const utilisateurLogin =
       user?.preferred_username || user?.name || user?.email || "utilisateur";
     const tempBook: Book = {
       id: Date.now(), // Temporary ID
       bookTitle,
-      utilisateurId,
+      utilisateurLogin,
       shelfId,
       pageCount: 0,
     };

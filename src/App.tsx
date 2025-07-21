@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { oidcConfig } from "@/lib/oidcConfig";
 
+
 // Public pages (no authentication required)
 import PublicBooks from "./pages/PublicBooks";
 import PublicShelves from "./pages/PublicShelves";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/public-shelves" element={<PublicShelves />} />
               
               {/* Protected routes - require authentication */}
+             
               <Route 
                 path="/dashboard" 
                 element={

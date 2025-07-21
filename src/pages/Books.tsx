@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CreateBookDialog } from "@/components/CreateBookDialog";
 import { useBooks } from "@/hooks/useBooks";
-
+import { EditBookDialog } from "./EditBookDialog";
 
 export default function Books() {
     const { books, loading, error } = useBooks();
@@ -94,9 +94,8 @@ export default function Books() {
                                             <Button variant="outline" size="sm" asChild>
                                             <Link to={`/books/${book.id}`}>Consulter</Link>
                                             </Button>
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link to={`/books/${book.id}/edit`}>Modifier</Link>
-                                            </Button>
+                                            <EditBookDialog bookId={book.id.toString()} />
+
                                         </div>
                                         <Link to={`/shelves/${book.shelfId}`} className="text-sm text-primary hover:underline">
                                             Voir l'étagère →

@@ -14,6 +14,7 @@ import { CreateBookDialog } from "@/components/CreateBookDialog";
 import { useBooks } from "@/hooks/useBooks";
 import { EditBookDialog } from "./EditBookDialog";
 
+
 export default function Books() {
     const { books, loading, error } = useBooks();
 
@@ -70,7 +71,7 @@ export default function Books() {
                                                     </Link>
                                                 </CardTitle>
                                                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                    <span>Utilisateur ID: {book.utilisateurId}</span>
+                                                    <span>Auteur: {book.utilisateurLogin}</span>
                                                     <Badge variant="secondary">
                                                         Étagère #{book.shelfId}
                                                     </Badge>

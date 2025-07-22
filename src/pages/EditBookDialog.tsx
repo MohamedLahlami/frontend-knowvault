@@ -22,22 +22,30 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
     shelfId: "",
   });
 
-  // Charger les données du livre et les étagères à l'ouverture du modal
-  useEffect(() => {
+   useEffect(() => {
     if (open) {
-      // Charger les infos du livre
-      axios.get<Book>(`http://localhost:8081/api/books/${bookId}`).then((res) => {
-        setBook(res.data);
-        setForm({
-          bookTitle: res.data.bookTitle,
-          shelfId: String(res.data.shelfId),
+      axios
+        .get<Book>(`http://localhost:8081/api/book/${bookId}`)
+        .then((res) => {
+          const bookData = res.data;
+          setBook(bookData);
+          setForm({
+            bookTitle: bookData.bookTitle || "",
+            shelfId: String(bookData.shelfId || ""),
+          });
+        })
+        .catch((err) => {
+          console.error("Erreur lors du chargement du livre :", err);
         });
-      });
 
-      // Charger les étagères
-      axios.get<Shelf[]>("http://localhost:8081/api/shelf").then((res) => {
-        setShelves(res.data);
-      });
+      axios
+        .get<Shelf[]>("http://localhost:8081/api/shelf")
+        .then((res) => {
+          setShelves(res.data);
+        })
+        .catch((err) => {
+          console.error("Erreur lors du chargement des étagères :", err);
+        });
     }
   }, [open, bookId]);
 
@@ -46,14 +54,29 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
   };
 
   const handleSave = async () => {
-    await axios.put(`http://localhost:8081/api/books/${bookId}`, {
+    if (!form.bookTitle.trim()) {
+      alert("Le titre du livre est requis.");
+      return;
+    }
+  
+    const payload: { bookTitle: string; shelfId?: number } = {
       bookTitle: form.bookTitle,
-      shelfId: Number(form.shelfId), // convertir en number
-    });
-    setOpen(false);
-    window.location.reload(); // ou déclencher une mise à jour via props
+    };
+  
+    if (form.shelfId) {
+      payload.shelfId = Number(form.shelfId);
+    }
+  
+    try {
+      await axios.put(`http://localhost:8081/api/book/${bookId}`, payload);
+      setOpen(false);
+      window.location.reload();
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour :", err);
+      alert("Une erreur est survenue lors de la mise à jour.");
+    }
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -69,7 +92,12 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Titre</label>
-            <Input name="bookTitle" value={form.bookTitle} onChange={handleChange} />
+            <Input
+              name="bookTitle"
+              value={form.bookTitle}
+              onChange={handleChange}
+              placeholder="Titre du livre"
+            />
           </div>
 
           <div>
@@ -80,7 +108,7 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
               onChange={handleChange}
               className="w-full border rounded px-3 py-2"
             >
-              <option value="">-- Sélectionner une étagère --</option>
+              <option value="">-- Garder l'étagère actuelle --</option>
               {shelves.map((shelf) => (
                 <option key={shelf.id} value={shelf.id}>
                   {shelf.label}

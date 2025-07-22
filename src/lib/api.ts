@@ -37,8 +37,7 @@ class ApiService {
     try {
       const response = await fetch(url, {
         ...fetchOptions,
-        headers: requestHeaders,
-          credentials: 'include',
+        headers: requestHeaders
       });
 
       if (!response.ok) {

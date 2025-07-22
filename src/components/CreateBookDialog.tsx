@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { useBooks } from "@/hooks/useBooks";
 
 // Extend the User type to include OIDC user properties
 interface OidcUser {
@@ -57,6 +58,7 @@ export function CreateBookDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { addBook } = useBooks();
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -80,17 +82,11 @@ export function CreateBookDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      const newBook = {
-        id: Date.now(),
-        title: form.title,
-        description: form.description,
-        author: form.author,
-        shelf: form.shelf,
-        pageCount: 0,
-        lastUpdated: "À l'instant",
-        color: "bg-blue-100 text-blue-800",
-      };
+    try {
+      // Find shelfId from shelves array
+      const shelf = shelves.find(s => s.title === form.shelf);
+      if (!shelf) throw new Error("Étagère invalide");
+      const createdBook = await addBook(form.title, shelf.id);
       setLoading(false);
       setOpen(false);
       toast({
@@ -98,9 +94,15 @@ export function CreateBookDialog({
         description: `Le livre '${form.title}' a été ajouté avec succès.`,
         duration: 3000,
       });
-      if (onBookCreated) onBookCreated(newBook);
-      // Keep form values (do not reset)
-    }, 1000);
+      if (onBookCreated) onBookCreated(createdBook);
+    } catch (err) {
+      setLoading(false);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le livre.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

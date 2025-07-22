@@ -3,6 +3,7 @@ export interface Shelf {
     label: string;
     description: string;
     tag: Tag;
+    bookCount: number;
 }
 
 export enum Tag {

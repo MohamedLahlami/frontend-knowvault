@@ -4,58 +4,19 @@ import { Link } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {useShelves} from "@/hooks/useShelves.ts";
 
 export default function Shelves() {
-  const shelves = [
-    {
-      id: 1,
-      title: "Documentation technique",
-      description: "Guides et documentation pour les développeurs",
-      bookCount: 12,
-      color: "bg-blue-100 text-blue-800",
-      lastUpdated: "Il y a 2 heures"
-    },
-    {
-      id: 2,
-      title: "Guides utilisateur",
-      description: "Manuels d'utilisation pour les utilisateurs finaux",
-      bookCount: 8,
-      color: "bg-green-100 text-green-800",
-      lastUpdated: "Hier"
-    },
-    {
-      id: 3,
-      title: "Procédures internes",
-      description: "Processus et procédures de l'entreprise",
-      bookCount: 4,
-      color: "bg-purple-100 text-purple-800",
-      lastUpdated: "Il y a 3 jours"
-    },
-    {
-      id: 4,
-      title: "Formation",
-      description: "Matériel de formation et tutoriels",
-      bookCount: 15,
-      color: "bg-orange-100 text-orange-800",
-      lastUpdated: "Il y a 1 semaine"
-    },
-    {
-      id: 5,
-      title: "Architecture",
-      description: "Documentation sur l'architecture système",
-      bookCount: 7,
-      color: "bg-red-100 text-red-800",
-      lastUpdated: "Il y a 5 jours"
-    },
-    {
-      id: 6,
-      title: "Ressources Marketing",
-      description: "Contenus et ressources marketing",
-      bookCount: 6,
-      color: "bg-pink-100 text-pink-800",
-      lastUpdated: "Il y a 2 jours"
-    }
-  ]
+
+  const { shelves, loading, error } = useShelves();
+
+  if (loading) {
+    return <div className="p-6 text-muted-foreground">Chargement des étagères...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">Erreur : {error}</div>;
+  }
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -97,7 +58,7 @@ export default function Shelves() {
                   to={`/shelves/${shelf.id}`} 
                   className="hover:text-primary transition-colors"
                 >
-                  {shelf.title}
+                  {shelf.label}
                 </Link>
               </CardTitle>
               <CardDescription className="text-sm">

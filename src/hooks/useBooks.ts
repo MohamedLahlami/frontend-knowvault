@@ -6,6 +6,7 @@ import {
   deleteBook,
   PaginatedBooks,
   searchBooks,
+  updateBook,
 } from "@/lib/bookApi";
 import { useAuth } from "react-oidc-context";
 
@@ -100,11 +101,36 @@ export const useBooks = () => {
     }
   };
 
+  // Edit book
+  const editBook = async (
+    bookId: number,
+    bookTitle: string,
+    description: string,
+    shelfId: number
+  ) => {
+    if (!token) throw new Error("No authentication token available");
+    try {
+      const updated = await updateBook(
+        bookId,
+        bookTitle,
+        description,
+        shelfId,
+        token
+      );
+      setBooks((prev) => prev.map((b) => (b.id === bookId ? updated : b)));
+      return updated;
+    } catch (err) {
+      setError("Erreur lors de la modification du livre");
+      throw err;
+    }
+  };
+
   return {
     books,
     loading,
     error,
     addBook,
+    editBook,
     deleteBook: deleteBookById,
     refetchBooks: fetchBooks,
     page,

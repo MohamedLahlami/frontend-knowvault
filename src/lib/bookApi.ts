@@ -78,3 +78,34 @@ export const searchBooks = async (
     }
   );
 };
+
+export const updateBook = async (
+  bookId: number,
+  bookTitle: string,
+  description: string,
+  shelfId: number,
+  token: string
+): Promise<Book> => {
+  return await apiService.put<Book>(
+    `/api/book/${bookId}`,
+    {
+      bookTitle,
+      description,
+      shelfId,
+    },
+    {
+      requireAuth: true,
+      token,
+    }
+  );
+};
+
+export const getBookById = async (
+  bookId: number,
+  token: string
+): Promise<Book> => {
+  return await apiService.get<Book>(`/api/book/${bookId}`, {
+    requireAuth: true,
+    token,
+  });
+};

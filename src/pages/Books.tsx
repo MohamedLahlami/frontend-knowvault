@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CreateBookDialog } from "@/components/CreateBookDialog";
+import { EditBookDialog } from "@/components/CreateBookDialog";
 import { useBooks } from "@/hooks/useBooks";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -49,6 +50,10 @@ export default function Books() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editBookDialog, setEditBookDialog] = useState<{
+    open: boolean;
+    book: any | null;
+  }>({ open: false, book: null });
   // Remove search and setSearch
 
   // Remove filteredBooks and use books directly
@@ -116,6 +121,18 @@ export default function Books() {
             </div>
           </div>
         </div>
+      )}
+      {/* Edit Book Dialog */}
+      {editBookDialog.book && (
+        <EditBookDialog
+          book={editBookDialog.book}
+          open={editBookDialog.open}
+          onOpenChange={(open) => setEditBookDialog((v) => ({ ...v, open }))}
+          onBookEdited={() => {
+            setEditBookDialog({ open: false, book: null });
+            refetchBooks();
+          }}
+        />
       )}
       <div className="flex justify-between items-center">
         <div>
@@ -240,8 +257,12 @@ export default function Books() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/books/${book.id}`}>Consulter</Link>
                       </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/books/${book.id}/edit`}>Modifier</Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditBookDialog({ open: true, book })}
+                      >
+                        Modifier
                       </Button>
                       <Button
                         variant="destructive"

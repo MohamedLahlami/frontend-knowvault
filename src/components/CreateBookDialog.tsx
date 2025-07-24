@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useBooks } from "@/hooks/useBooks";
+import { Book } from "@/types/book";
 
 // Extend the User type to include OIDC user properties
 interface OidcUser {
@@ -84,7 +85,7 @@ export function CreateBookDialog({
     setLoading(true);
     try {
       // Find shelfId from shelves array
-      const shelf = shelves.find(s => s.title === form.shelf);
+      const shelf = shelves.find((s) => s.title === form.shelf);
       if (!shelf) throw new Error("Étagère invalide");
       const createdBook = await addBook(form.title, shelf.id);
       setLoading(false);
@@ -171,6 +172,128 @@ export function CreateBookDialog({
           <DialogFooter>
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Création..." : "Créer"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export interface EditBookDialogProps {
+  book: Book;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onBookEdited?: (book: Book) => void;
+}
+
+export function EditBookDialog({
+  book,
+  open,
+  onOpenChange,
+  onBookEdited,
+}: EditBookDialogProps) {
+  const { editBook } = useBooks();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    title: book.bookTitle,
+    description: book.description || "",
+    shelf: String(book.shelfId),
+  });
+
+  useEffect(() => {
+    setForm({
+      title: book.bookTitle,
+      description: book.description || "",
+      shelf: String(book.shelfId),
+    });
+  }, [book]);
+
+  const handleChange = (field: string, value: string) => {
+    setForm((f) => ({ ...f, [field]: value }));
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const shelfId = Number(form.shelf);
+      const updatedBook = await editBook(
+        book.id,
+        form.title,
+        form.description,
+        shelfId
+      );
+      setLoading(false);
+      onOpenChange(false);
+      toast({
+        title: "Livre modifié",
+        description: `Le livre '${form.title}' a été modifié avec succès.`,
+        duration: 3000,
+      });
+      if (onBookEdited) onBookEdited(updatedBook);
+    } catch (err) {
+      setLoading(false);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier le livre.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Modifier le livre</DialogTitle>
+          <DialogDescription>
+            Modifiez les informations du livre.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Titre</label>
+            <Input
+              value={form.title}
+              onChange={(e) => handleChange("title", e.target.value)}
+              required
+              placeholder="Titre du livre"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Description
+            </label>
+            <Input
+              value={form.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              required
+              placeholder="Description du livre"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Étagère</label>
+            <Select
+              value={form.shelf}
+              onValueChange={(v) => handleChange("shelf", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir une étagère" />
+              </SelectTrigger>
+              <SelectContent>
+                {shelves.map((shelf) => (
+                  <SelectItem key={shelf.id} value={String(shelf.id)}>
+                    {shelf.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Modification..." : "Modifier"}
             </Button>
           </DialogFooter>
         </form>

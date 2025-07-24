@@ -4,4 +4,7 @@ export interface Book {
     utilisateurLogin: string;
     shelfId: number;
     pageCount: number;
+    createdAt?: string;
+    updatedAt?: string;
+    description?: string;
 }

@@ -1,4 +1,4 @@
-import { Book, Plus, Search, Calendar } from "lucide-react";
+import { Book, Plus, Search, Calendar, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -11,17 +11,129 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CreateBookDialog } from "@/components/CreateBookDialog";
+import { EditBookDialog } from "@/components/CreateBookDialog";
 import { useBooks } from "@/hooks/useBooks";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Books() {
-  const { books, loading, error, refetchBooks } = useBooks();
+  const {
+    books,
+    loading,
+    error,
+    refetchBooks,
+    deleteBook,
+    page,
+    setPage,
+    size,
+    setSize,
+    sort,
+    setSort,
+    totalPages,
+    totalElements,
+    searchQuery,
+    setSearchQuery,
+  } = useBooks();
+  const { toast } = useToast();
 
   const handleBookCreated = () => {
     refetchBooks();
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editBookDialog, setEditBookDialog] = useState<{
+    open: boolean;
+    book: any | null;
+  }>({ open: false, book: null });
+  // Remove search and setSearch
+
+  // Remove filteredBooks and use books directly
+
+  const handleDelete = async () => {
+    if (confirmDeleteId === null) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteBook(confirmDeleteId);
+      setConfirmDeleteId(null);
+      toast({
+        title: "Livre supprimé",
+        description: "Le livre a été supprimé avec succès.",
+        duration: 3000,
+      });
+    } catch (err) {
+      setDeleteError("Erreur lors de la suppression du livre.");
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le livre.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Show toast for general loading errors
+  if (error) {
+    toast({
+      title: "Erreur",
+      description: error,
+      variant: "destructive",
+    });
+  }
+
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-6 animate-fade-in relative">
+      {/* Custom Modal for Delete Confirmation */}
+      {confirmDeleteId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-xl font-bold mb-4">Confirmer la suppression</h2>
+            <p className="mb-6 text-muted-foreground">
+              Êtes-vous sûr de vouloir supprimer ce livre ? Cette action est
+              irréversible.
+            </p>
+            {deleteError && <p className="text-red-500 mb-2">{deleteError}</p>}
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Suppression..." : "Supprimer"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmDeleteId(null)}
+                disabled={deleting}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Book Dialog */}
+      {editBookDialog.book && (
+        <EditBookDialog
+          book={editBookDialog.book}
+          open={editBookDialog.open}
+          onOpenChange={(open) => setEditBookDialog((v) => ({ ...v, open }))}
+          onBookEdited={() => {
+            setEditBookDialog({ open: false, book: null });
+            refetchBooks();
+          }}
+        />
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Livres</h1>
@@ -42,16 +154,54 @@ export default function Books() {
         />
       </div>
 
-      {/* Barre de recherche */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Rechercher un livre..." className="pl-10" />
+      {/* Search, page size, and sort controls at the top */}
+      <div className="flex flex-col md:flex-row md:items-center md:gap-4 mb-2">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un livre..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0); // Reset to first page on new search
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-4 mt-2 md:mt-0">
+          <label className="text-sm">Taille de page:</label>
+          <Select
+            value={String(size)}
+            onValueChange={(v) => setSize(Number(v))}
+          >
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+          <label className="text-sm">Trier par:</label>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="bookTitle,asc">Titre (A-Z)</SelectItem>
+              <SelectItem value="bookTitle,desc">Titre (Z-A)</SelectItem>
+              <SelectItem value="createdAt,desc">
+                Date de création (récent)
+              </SelectItem>
+              <SelectItem value="createdAt,asc">
+                Date de création (ancien)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-
-      {/* Gestion état chargement / erreur */}
-      {loading && <p>Chargement des livres...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
       {/* Liste des livres */}
       {!loading && !error && (
         <div className="space-y-4">
@@ -76,11 +226,18 @@ export default function Books() {
                             {book.bookTitle}
                           </Link>
                         </CardTitle>
+                        <CardDescription className="text-sm max-w-2xl">
+                          {book.description}
+                        </CardDescription>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>Utilisateur ID: {book.utilisateurLogin}</span>
                           <Badge variant="secondary">
-                            Étagère #{book.shelfId}
+                            Étagère : {book.shelfId}
                           </Badge>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {book.updatedAt}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -100,8 +257,19 @@ export default function Books() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to={`/books/${book.id}`}>Consulter</Link>
                       </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link to={`/books/${book.id}/edit`}>Modifier</Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditBookDialog({ open: true, book })}
+                      >
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setConfirmDeleteId(book.id)}
+                      >
+                        <Trash className="h-4 w-4" />
                       </Button>
                     </div>
                     <Link
@@ -136,6 +304,31 @@ export default function Books() {
               />
             </div>
           )}
+          {/* Pagination controls and total count at the bottom */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
+            <span className="text-sm text-muted-foreground">
+              {totalElements} livres trouvés
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                className="px-3 py-1 border rounded disabled:opacity-50"
+                onClick={() => setPage(page - 1)}
+                disabled={page === 0 || loading}
+              >
+                Précédent
+              </button>
+              <span className="text-sm">
+                Page {page + 1} sur {totalPages}
+              </span>
+              <button
+                className="px-3 py-1 border rounded disabled:opacity-50"
+                onClick={() => setPage(page + 1)}
+                disabled={page + 1 >= totalPages || loading}
+              >
+                Suivant
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

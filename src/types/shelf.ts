@@ -4,16 +4,18 @@ export interface Shelf {
     description: string;
     tag: Tag;
     bookCount: number;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export enum Tag {
-    JAVA = "Java",
-    MOBILE = "Mobile",
-    KOTLIN = "Kotlin",
-    DEVOPS = "Devops",
-    RUBY = "Ruby",
-    JAVASCRIPT = "Javascript",
-    C_PLUS_PLUS = "C++",
-    DESKTOP = "Desktop",
-    TYPESCRIPT = "Typescript",
+    JAVA = "JAVA",
+    MOBILE = "MOBILE",
+    KOTLIN = "KOTLIN",
+    DEVOPS = "DEVOPS",
+    RUBY = "RUBY",
+    JAVASCRIPT = "JAVASCRIPT",
+    C_PLUS_PLUS = "C_PLUS_PLUS",
+    DESKTOP = "DESKTOP",
+    TYPESCRIPT = "TYPESCRIPT",
 }

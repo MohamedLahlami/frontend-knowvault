@@ -1,101 +1,223 @@
-
-import { BookOpen, Plus, Search } from "lucide-react"
-import { Link } from "react-router-dom"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { MoreHorizontal, BookOpen, Plus, Search } from "lucide-react"
+import {Link, useNavigate} from "react-router-dom"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction,} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import {useShelves} from "@/hooks/useShelves.ts";
+import { useDeleteShelf, useShelves } from "@/hooks/useShelves.ts"
+import {useState} from "react"
 
 export default function Shelves() {
+    const pageSize = 6
+    const { shelves, loading, error, page, setPage, totalPages, refreshShelves} = useShelves()
+    const { handleDeleteShelf, loading: deleting } = useDeleteShelf()
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null)
+    const [shelfToDelete, setShelfToDelete] = useState<number | null>(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const navigate = useNavigate();
+    const [inputValue, setInputValue] = useState("");
 
-  const { shelves, loading, error } = useShelves();
+    if (loading) {
+        return <div className="p-6 text-muted-foreground">Chargement des étagères...</div>
+    }
+    if (error) {
+        return <div className="p-6 text-red-500">Erreur : {error}</div>
+    }
 
-  if (loading) {
-    return <div className="p-6 text-muted-foreground">Chargement des étagères...</div>;
-  }
+    const formatDate = (iso: string) =>
+        new Intl.DateTimeFormat("fr-FR", {
+            dateStyle: "medium",
+            timeStyle: "short",
+        }).format(new Date(iso))
 
-  if (error) {
-    return <div className="p-6 text-red-500">Erreur : {error}</div>;
-  }
+    const toggleMenu = (id: number) => {
+        setMenuOpenId((current) => (current === id ? null : id))
+    }
+    const closeMenu = () => setMenuOpenId(null)
 
-  return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Étagères</h1>
-          <p className="text-muted-foreground mt-1">
-            Organisez vos livres en collections thématiques
-          </p>
-        </div>
-        <Button className="bg-accent hover:bg-accent/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle étagère
-        </Button>
-      </div>
+    const handleEdit = (id: number) => {
+        closeMenu();
+        navigate(`/shelves/${id}/edit`);
+    };
 
-      {/* Barre de recherche */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher une étagère..."
-          className="pl-10"
-        />
-      </div>
+    const openDeleteDialog = (id: number) => {
+        closeMenu()
+        setShelfToDelete(id)
+        setIsDialogOpen(true)
+    }
 
-      {/* Grille des étagères */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {shelves.map((shelf) => (
-          <Card key={shelf.id} className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${shelf.color}`}>
-                  {shelf.bookCount} livre{shelf.bookCount > 1 ? 's' : ''}
-                </span>
-              </div>
-              <CardTitle className="text-xl">
-                <Link 
-                  to={`/shelves/${shelf.id}`} 
-                  className="hover:text-primary transition-colors"
-                >
-                  {shelf.label}
+    const confirmDelete = async () => {
+        if (shelfToDelete !== null) {
+            await handleDeleteShelf(shelfToDelete)
+            setIsDialogOpen(false)
+            setShelfToDelete(null)
+
+            if (refreshShelves) {
+                await refreshShelves()
+            } else {
+                setPage((p) => p)
+            }
+
+            if (shelves.length === 1 && page > 0) {
+                setPage(page - 1)
+            }
+        }
+    }
+
+    return (
+        <div className="p-6 space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Étagères</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Organisez vos livres en collections thématiques
+                    </p>
+                </div>
+                <Link to="/shelves/new">
+                    <Button className="bg-accent hover:bg-accent/90">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Nouvelle étagère
+                    </Button>
                 </Link>
-              </CardTitle>
-              <CardDescription className="text-sm">
-                {shelf.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Mis à jour {shelf.lastUpdated}</span>
-                <Link 
-                  to={`/shelves/${shelf.id}`}
-                  className="text-primary hover:underline font-medium"
-                >
-                  Voir plus →
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
 
-      {/* État vide */}
-      {shelves.length === 0 && (
-        <div className="text-center py-12">
-          <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            Aucune étagère trouvée
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Commencez par créer votre première étagère pour organiser vos livres.
-          </p>
-          <Button className="bg-accent hover:bg-accent/90">
-            <Plus className="h-4 w-4 mr-2" />
-            Créer une étagère
-          </Button>
+            <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+                <Input
+                    placeholder="Rechercher une étagère..."
+                    className="pl-10"
+                />
+            </div>
+
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {shelves.map((shelf) => (
+                    <Card
+                        key={shelf.id}
+                        className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1"
+                    >
+                        <CardHeader>
+                            <div className="flex items-start justify-between">
+                                <BookOpen className="h-8 w-8 text-primary" />
+                                <div className="flex items-center space-x-2">
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-200 text-purple-800">
+                                    {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
+                                </span>
+                                <div className="relative ml-2">
+                                    <button
+                                        onClick={() => toggleMenu(shelf.id)}
+                                        className="p-1 rounded hover:bg-gray-200"
+                                        aria-label="Actions"
+                                        type="button"
+                                    >
+                                        <MoreHorizontal className="h-5 w-5 text-gray-600" />
+                                    </button>
+                                    {menuOpenId === shelf.id && (
+                                        <div
+                                            className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10"
+                                            onMouseLeave={closeMenu}
+                                        >
+                                            <button
+                                                onClick={() => handleEdit(shelf.id)}
+                                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                            >
+                                                Modifier
+                                            </button>
+                                            <button
+                                                onClick={() => openDeleteDialog(shelf.id)}
+                                                className="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                </div>
+                            </div>
+                            <CardTitle className="text-xl">
+                                <Link
+                                    to={`/shelves/${shelf.id}`}
+                                    className="hover:text-primary transition-colors"
+                                >
+                                    {shelf.label}
+                                </Link>
+                            </CardTitle>
+                            <CardDescription className="text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: shelf.description }} />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>Mis à jour {formatDate(shelf.updatedAt)}</span>
+                                <Link
+                                    to={`/shelves/${shelf.id}`}
+                                    className="text-primary hover:underline font-medium"
+                                >
+                                    Voir plus →
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {shelves.length === 0 && (
+                <div className="text-center py-12">
+                    <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">Aucune étagère trouvée</h3>
+                    <p className="text-muted-foreground mb-4">
+                        Commencez par créer votre première étagère pour organiser vos livres.
+                    </p>
+                    <Button className="bg-accent hover:bg-accent/90">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Créer une étagère
+                    </Button>
+                </div>
+            )}
+
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 pt-6">
+                    <Button variant="outline" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                        Précédent
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                        Page {page + 1} sur {totalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        disabled={page + 1 >= totalPages}
+                        onClick={() => setPage(page + 1)}
+                    >
+                        Suivant
+                    </Button>
+                </div>
+            )}
+
+            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Êtes-vous sûr de vouloir supprimer cette étagère ? Cette action est irréversible.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setIsDialogOpen(false)
+                                setShelfToDelete(null)
+                            }}
+                        >
+                            Annuler
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={confirmDelete}
+                            disabled={deleting}
+                        >
+                            Supprimer
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
-      )}
-    </div>
-  )
+    )
 }

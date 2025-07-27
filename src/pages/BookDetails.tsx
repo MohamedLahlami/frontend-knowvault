@@ -1,60 +1,68 @@
-import { useParams, Link } from "react-router-dom"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
-import { useEffect, useState } from "react"
-import { getBookById } from "@/lib/bookApi"
-import { useAuth } from "react-oidc-context"
-import { EditBookDialog } from "@/components/CreateBookDialog"
+import { useParams, Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getBookById } from "@/lib/bookApi";
+import { useAuth } from "react-oidc-context";
+import { EditBookDialog } from "@/components/BookDialog";
 
 export default function BookDetails() {
-  const { id } = useParams()
-  const [book, setBook] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const auth = useAuth()
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const { id } = useParams();
+  const [book, setBook] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const auth = useAuth();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        const data = await getBookById(Number(id), auth.user?.access_token)
-        setBook(data)
+        setLoading(true);
+        setError(null);
+        const data = await getBookById(Number(id), auth.user?.access_token);
+        setBook(data);
       } catch (err) {
-        setError("Erreur lors du chargement du livre.")
+        setError("Erreur lors du chargement du livre.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    if (id && auth.user?.access_token) fetchBook()
-  }, [id, auth.user])
+    };
+    if (id && auth.user?.access_token) fetchBook();
+  }, [id, auth.user]);
 
   const refetchBook = async () => {
     if (id && auth.user?.access_token) {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const data = await getBookById(Number(id), auth.user?.access_token)
-        setBook(data)
+        const data = await getBookById(Number(id), auth.user?.access_token);
+        setBook(data);
       } catch (err) {
-        setError("Erreur lors du chargement du livre.")
+        setError("Erreur lors du chargement du livre.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   if (loading) {
-    return <div className="p-6 text-center text-muted-foreground">Chargement du livre...</div>
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Chargement du livre...
+      </div>
+    );
   }
   if (error) {
-    return <div className="p-6 text-center text-red-500">{error}</div>
+    return <div className="p-6 text-center text-red-500">{error}</div>;
   }
   if (!book) {
-    return <div className="p-6 text-center text-muted-foreground">📚 Livre non trouvé.</div>
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        📚 Livre non trouvé.
+      </div>
+    );
   }
 
   return (
@@ -66,20 +74,26 @@ export default function BookDetails() {
 
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle className="text-xl text-muted-foreground">Détails du livre</CardTitle>
+          <CardTitle className="text-xl text-muted-foreground">
+            Détails du livre
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-base text-foreground">{book.description}</p>
           <div className="border-t pt-4 grid grid-cols-2 gap-4 text-sm text-muted-foreground">
             <div>
-              <span className="font-medium text-foreground">Auteur:</span> {book.utilisateurLogin}
+              <span className="font-medium text-foreground">Auteur:</span>{" "}
+              {book.utilisateurLogin}
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               {book.updatedAt}
             </div>
             <div>
-              <span className="font-medium text-foreground">Nombre de pages:</span> {book.pageCount}
+              <span className="font-medium text-foreground">
+                Nombre de pages:
+              </span>{" "}
+              {book.pageCount}
             </div>
           </div>
         </CardContent>
@@ -105,11 +119,11 @@ export default function BookDetails() {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           onBookEdited={() => {
-            setEditDialogOpen(false)
-            refetchBook()
+            setEditDialogOpen(false);
+            refetchBook();
           }}
         />
       )}
     </div>
-  )
+  );
 }

@@ -8,9 +8,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreateBookDialog } from "@/components/CreateBookDialog";
+import { CreateBookDialog } from "@/components/BookDialog";
+import { useShelves } from "@/hooks/useShelves";
 
 export default function Dashboard() {
+  const { shelves, loading: shelvesLoading } = useShelves();
+
   const stats = [
     { title: "Étagères", count: 8, icon: BookOpen, color: "text-blue-600" },
     { title: "Livres", count: 24, icon: Book, color: "text-green-600" },
@@ -35,23 +38,26 @@ export default function Dashboard() {
     },
   ];
 
-  const recentShelves = [
-    {
-      title: "Documentation technique",
-      bookCount: 12,
-      color: "bg-blue-100 text-blue-800",
-    },
-    {
-      title: "Guides utilisateur",
-      bookCount: 8,
-      color: "bg-green-100 text-green-800",
-    },
-    {
-      title: "Procédures",
-      bookCount: 4,
-      color: "bg-purple-100 text-purple-800",
-    },
-  ];
+  // Generate color classes for shelves
+  const getShelfColor = (index: number) => {
+    const colors = [
+      "bg-blue-100 text-blue-800",
+      "bg-green-100 text-green-800",
+      "bg-purple-100 text-purple-800",
+      "bg-orange-100 text-orange-800",
+      "bg-red-100 text-red-800",
+      "bg-indigo-100 text-indigo-800",
+    ];
+    return colors[index % colors.length];
+  };
+
+  // Get recent shelves (first 3)
+  const recentShelves = shelves.slice(0, 3).map((shelf, index) => ({
+    id: shelf.id,
+    title: shelf.label,
+    bookCount: shelf.bookCount,
+    color: getShelfColor(index),
+  }));
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -127,34 +133,46 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              Étagères populaires
+              Étagères récentes
             </CardTitle>
-            <CardDescription>Collections les plus consultées</CardDescription>
+            <CardDescription>
+              Vos étagères les plus récemment créées
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentShelves.map((shelf, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-              >
-                <div className="space-y-1">
-                  <Link
-                    to={`/shelves/${index + 1}`}
-                    className="font-medium text-foreground hover:text-primary transition-colors"
-                  >
-                    {shelf.title}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">
-                    {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
-                  </p>
-                </div>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${shelf.color}`}
-                >
-                  Populaire
-                </span>
+            {shelvesLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Chargement des étagères...
               </div>
-            ))}
+            ) : recentShelves.length > 0 ? (
+              recentShelves.map((shelf) => (
+                <div
+                  key={shelf.id}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${shelf.color}`}>
+                      <BookOpen className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <Link
+                        to={`/shelves/${shelf.id}`}
+                        className="font-medium text-foreground hover:text-primary transition-colors"
+                      >
+                        {shelf.title}
+                      </Link>
+                      <p className="text-sm text-muted-foreground">
+                        {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucune étagère trouvée
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

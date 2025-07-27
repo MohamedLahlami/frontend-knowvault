@@ -21,28 +21,20 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useBooks } from "@/hooks/useBooks";
+import { useShelves } from "@/hooks/useShelves";
 import { Book } from "@/types/book";
+import { Shelf } from "@/types/shelf";
 
 // Extend the User type to include OIDC user properties
 interface OidcUser {
   preferred_username?: string;
   name?: string;
   email?: string;
-  [key: string]: any;
+  access_token?: string;
 }
 
-// Mock shelves (copied from Shelves.tsx)
-const shelves = [
-  { id: 1, title: "Documentation technique" },
-  { id: 2, title: "Guides utilisateur" },
-  { id: 3, title: "Procédures internes" },
-  { id: 4, title: "Formation" },
-  { id: 5, title: "Architecture" },
-  { id: 6, title: "Ressources Marketing" },
-];
-
 export interface CreateBookDialogProps {
-  onBookCreated?: (book: any) => void;
+  onBookCreated?: (book: Book) => void;
   buttonClassName?: string;
   buttonVariant?: string;
   buttonChildren?: React.ReactNode;
@@ -55,15 +47,21 @@ export function CreateBookDialog({
   buttonChildren,
 }: CreateBookDialogProps) {
   const auth = useAuth();
-  const user = auth.user as OidcUser;
+  const user = auth.user as unknown as OidcUser;
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addBook } = useBooks();
+  const {
+    shelves,
+    loading: shelvesLoading,
+    error: shelvesError,
+  } = useShelves();
+
   const [form, setForm] = useState({
     title: "",
     description: "",
-    shelf: shelves[0].title,
+    shelfId: "",
     author: user?.preferred_username || user?.name || "Utilisateur",
   });
 
@@ -73,8 +71,14 @@ export function CreateBookDialog({
       ...f,
       author: user?.preferred_username || user?.name || "Utilisateur",
     }));
-    // eslint-disable-next-line
   }, [user]);
+
+  // Set default shelf when shelves are loaded
+  useEffect(() => {
+    if (shelves.length > 0 && !form.shelfId) {
+      setForm((f) => ({ ...f, shelfId: String(shelves[0].id) }));
+    }
+  }, [shelves, form.shelfId]);
 
   const handleChange = (field: string, value: string) => {
     setForm((f) => ({ ...f, [field]: value }));
@@ -84,10 +88,10 @@ export function CreateBookDialog({
     e.preventDefault();
     setLoading(true);
     try {
-      // Find shelfId from shelves array
-      const shelf = shelves.find((s) => s.title === form.shelf);
-      if (!shelf) throw new Error("Étagère invalide");
-      const createdBook = await addBook(form.title, shelf.id);
+      const shelfId = Number(form.shelfId);
+      if (!shelfId) throw new Error("Étagère invalide");
+
+      const createdBook = await addBook(form.title, shelfId, form.description);
       setLoading(false);
       setOpen(false);
       toast({
@@ -106,10 +110,32 @@ export function CreateBookDialog({
     }
   };
 
+  // Show error toast for shelves loading errors
+  useEffect(() => {
+    if (shelvesError) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les étagères.",
+        variant: "destructive",
+      });
+    }
+  }, [shelvesError, toast]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className={buttonClassName} variant={buttonVariant as any}>
+        <Button
+          className={buttonClassName}
+          variant={
+            buttonVariant as
+              | "default"
+              | "destructive"
+              | "outline"
+              | "secondary"
+              | "ghost"
+              | "link"
+          }
+        >
           {buttonChildren || (
             <>
               <Plus className="h-4 w-4 mr-2" />
@@ -150,27 +176,41 @@ export function CreateBookDialog({
           <div>
             <label className="block text-sm font-medium mb-1">Étagère</label>
             <Select
-              value={form.shelf}
-              onValueChange={(v) => handleChange("shelf", v)}
+              value={form.shelfId}
+              onValueChange={(v) => handleChange("shelfId", v)}
+              disabled={shelvesLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choisir une étagère" />
+                <SelectValue
+                  placeholder={
+                    shelvesLoading ? "Chargement..." : "Choisir une étagère"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {shelves.map((shelf) => (
-                  <SelectItem key={shelf.id} value={shelf.title}>
-                    {shelf.title}
+                  <SelectItem key={shelf.id} value={String(shelf.id)}>
+                    {shelf.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {shelvesError && (
+              <p className="text-sm text-red-500 mt-1">
+                Erreur lors du chargement des étagères
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Auteur</label>
             <Input value={form.author} readOnly disabled />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button
+              type="submit"
+              disabled={loading || shelvesLoading}
+              className="w-full"
+            >
               {loading ? "Création..." : "Créer"}
             </Button>
           </DialogFooter>
@@ -196,17 +236,23 @@ export function EditBookDialog({
   const { editBook } = useBooks();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const {
+    shelves,
+    loading: shelvesLoading,
+    error: shelvesError,
+  } = useShelves();
+
   const [form, setForm] = useState({
     title: book.bookTitle,
     description: book.description || "",
-    shelf: String(book.shelfId),
+    shelfId: String(book.shelfId),
   });
 
   useEffect(() => {
     setForm({
       title: book.bookTitle,
       description: book.description || "",
-      shelf: String(book.shelfId),
+      shelfId: String(book.shelfId),
     });
   }, [book]);
 
@@ -218,7 +264,7 @@ export function EditBookDialog({
     e.preventDefault();
     setLoading(true);
     try {
-      const shelfId = Number(form.shelf);
+      const shelfId = Number(form.shelfId);
       const updatedBook = await editBook(
         book.id,
         form.title,
@@ -242,6 +288,17 @@ export function EditBookDialog({
       });
     }
   };
+
+  // Show error toast for shelves loading errors
+  useEffect(() => {
+    if (shelvesError) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les étagères.",
+        variant: "destructive",
+      });
+    }
+  }, [shelvesError, toast]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -276,23 +333,37 @@ export function EditBookDialog({
           <div>
             <label className="block text-sm font-medium mb-1">Étagère</label>
             <Select
-              value={form.shelf}
-              onValueChange={(v) => handleChange("shelf", v)}
+              value={form.shelfId}
+              onValueChange={(v) => handleChange("shelfId", v)}
+              disabled={shelvesLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choisir une étagère" />
+                <SelectValue
+                  placeholder={
+                    shelvesLoading ? "Chargement..." : "Choisir une étagère"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {shelves.map((shelf) => (
                   <SelectItem key={shelf.id} value={String(shelf.id)}>
-                    {shelf.title}
+                    {shelf.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {shelvesError && (
+              <p className="text-sm text-red-500 mt-1">
+                Erreur lors du chargement des étagères
+              </p>
+            )}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button
+              type="submit"
+              disabled={loading || shelvesLoading}
+              className="w-full"
+            >
               {loading ? "Modification..." : "Modifier"}
             </Button>
           </DialogFooter>

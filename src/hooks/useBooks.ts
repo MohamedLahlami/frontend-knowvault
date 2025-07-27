@@ -59,7 +59,11 @@ export const useBooks = () => {
   }, [fetchBooks]);
 
   // Add book with optimistic update
-  const addBook = async (bookTitle: string, shelfId: number) => {
+  const addBook = async (
+    bookTitle: string,
+    shelfId: number,
+    description: string
+  ) => {
     if (!token) throw new Error("No authentication token available");
     // Use user info for utilisateurId
     const utilisateurLogin =
@@ -70,10 +74,11 @@ export const useBooks = () => {
       utilisateurLogin,
       shelfId,
       pageCount: 0,
+      description,
     };
     setBooks((prev) => [tempBook, ...prev]);
     try {
-      const created = await createBook(bookTitle, shelfId, token);
+      const created = await createBook(bookTitle, shelfId, description, token);
       setBooks((prev) => [
         created,
         ...prev.filter((b) => b.id !== tempBook.id),

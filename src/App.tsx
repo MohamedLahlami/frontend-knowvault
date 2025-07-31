@@ -20,6 +20,9 @@ import Shelves from "./pages/Shelves";
 import Books from "./pages/Books";
 import NotFound from "./pages/NotFound";
 import BookDetails from "./pages/BookDetails";
+import Chapters from "./pages/chapters";
+import Pages from "./pages/pages";
+import PageDetails from "./pages/PageDetails";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +67,33 @@ const App = () => (
                     <Books />
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+  path="/chapter/:id/pages"
+  element={
+    <ProtectedRoute>
+      <Pages />
+    </ProtectedRoute>
+  }
+/>
+<Route 
+  path="/chapters/:id"
+  element={
+    <ProtectedRoute>
+      <Pages />
+    </ProtectedRoute>
+  }
+/>
+<Route path="/page/:pageId" element={<PageDetails />} />
+
+
+              <Route 
+                path="/chapters"
+                element={
+                  <ProtectedRoute>
+                    <Chapters/>
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/books/:id"

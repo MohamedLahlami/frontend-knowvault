@@ -3,5 +3,4 @@ export interface Book {
     bookTitle: string;
     utilisateurLogin: string;
     shelfId: number;
-    pageCount: number;
 }

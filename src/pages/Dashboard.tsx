@@ -9,55 +9,56 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CreateBookDialog } from "@/components/BookDialog";
-import { useShelves } from "@/hooks/useShelves";
+import { useDashboard } from "@/hooks/useDashboard";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis } from "recharts";
 
 export default function Dashboard() {
-  const { shelves, loading: shelvesLoading } = useShelves();
+  const { dashboard, loading, error } = useDashboard();
+
+  const tagData = [
+    { name: "DEVOPS", value: 12 },
+    { name: "MOBILE", value: 8 },
+    { name: "KOTLIN", value: 5 },
+    { name: "JAVA", value: 10 },
+  ];
+
+  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50"];
 
   const stats = [
-    { title: "Étagères", count: 8, icon: BookOpen, color: "text-blue-600" },
-    { title: "Livres", count: 24, icon: Book, color: "text-green-600" },
-    { title: "Pages", count: 156, icon: Search, color: "text-purple-600" },
-  ];
-
-  const recentBooks = [
     {
-      title: "Guide de démarrage React",
-      author: "Documentation",
-      updatedAt: "Il y a 2 heures",
+      title: "Étagères",
+      count: dashboard?.totalShelves ?? 0,
+      icon: BookOpen,
+      color: "text-blue-600",
     },
     {
-      title: "Bonnes pratiques JavaScript",
-      author: "Équipe Dev",
-      updatedAt: "Hier",
+      title: "Livres",
+      count: dashboard?.totalBooks ?? 0,
+      icon: Book,
+      color: "text-green-600",
     },
     {
-      title: "Architecture système",
-      author: "Tech Lead",
-      updatedAt: "Il y a 3 jours",
+      title: "Pages",
+      count: dashboard?.totalPages ?? 0,
+      icon: Search,
+      color: "text-purple-600",
     },
   ];
 
-  // Generate color classes for shelves
-  const getShelfColor = (index: number) => {
-    const colors = [
-      "bg-blue-100 text-blue-800",
-      "bg-green-100 text-green-800",
-      "bg-purple-100 text-purple-800",
-      "bg-orange-100 text-orange-800",
-      "bg-red-100 text-red-800",
-      "bg-indigo-100 text-indigo-800",
-    ];
-    return colors[index % colors.length];
-  };
+  if (loading) {
+    return <div className="p-6">Chargement du tableau de bord...</div>;
+  }
 
-  // Get recent shelves (first 3)
-  const recentShelves = shelves.slice(0, 3).map((shelf, index) => ({
-    id: shelf.id,
-    title: shelf.label,
-    bookCount: shelf.bookCount,
-    color: getShelfColor(index),
-  }));
+  if (error) {
+    return <div className="p-6 text-red-500">Erreur : {error}</div>;
+  }
+
+  const formatDate = (iso: string) =>
+    new Intl.DateTimeFormat("fr-FR", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(iso));
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -104,75 +105,63 @@ export default function Dashboard() {
             <CardDescription>Les derniers contenus mis à jour</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentBooks.map((book, index) => (
+            {dashboard?.recentBooks.map((book, index) => (
               <div
                 key={index}
                 className="flex items-start justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
               >
                 <div className="space-y-1">
                   <Link
-                    to={`/books/${index + 1}`}
+                    to={`/books/${book.id}`}
                     className="font-medium text-foreground hover:text-primary transition-colors"
                   >
-                    {book.title}
+                    {book.bookTitle}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    Par {book.author}
+                    Par {book.utilisateurLogin}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {book.updatedAt}
+                  {formatDate(book.updatedAt)}
                 </span>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        {/* Étagères populaires */}
+        {/* Étagères avec le plus de livres */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              Étagères récentes
+              Étagères avec le plus de livres
             </CardTitle>
             <CardDescription>
-              Vos étagères les plus récemment créées
+              Collections contenant le plus de livres
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {shelvesLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Chargement des étagères...
-              </div>
-            ) : recentShelves.length > 0 ? (
-              recentShelves.map((shelf) => (
-                <div
-                  key={shelf.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${shelf.color}`}>
-                      <BookOpen className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <Link
-                        to={`/shelves/${shelf.id}`}
-                        className="font-medium text-foreground hover:text-primary transition-colors"
-                      >
-                        {shelf.title}
-                      </Link>
-                      <p className="text-sm text-muted-foreground">
-                        {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
+            {dashboard?.topShelves.map((shelf, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+              >
+                <div className="space-y-1">
+                  <Link
+                    to={`/shelves/${shelf.id}`}
+                    className="font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    {shelf.label}
+                  </Link>
+                  <p className="text-sm text-muted-foreground">
+                    {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
+                  </p>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucune étagère trouvée
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                  Populaire
+                </span>
               </div>
-            )}
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -218,6 +207,70 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Répartition des Tags (Camembert)
+            </CardTitle>
+            <CardDescription>
+              Distribution des types de tags dans la base
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={tagData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  dataKey="value"
+                  label
+                >
+                  {tagData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Répartition des Tags (Barres)
+            </CardTitle>
+            <CardDescription>Nombre d'éléments par tag</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={tagData}
+                layout="vertical"
+                margin={{ top: 10, right: 30, left: 20, bottom: 5 }}
+              >
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={100} />
+                <Tooltip />
+                <Bar dataKey="value" barSize={20}>
+                  {tagData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

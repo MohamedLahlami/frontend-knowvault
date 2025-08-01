@@ -209,7 +209,7 @@ export function CreateBookDialog({
             <Button
               type="submit"
               disabled={loading || shelvesLoading}
-              className="w-full"
+              className="w-full bg-accent hover:bg-accent/90 disabled:bg-accent/50"
             >
               {loading ? "Création..." : "Créer"}
             </Button>

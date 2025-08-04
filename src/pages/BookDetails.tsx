@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getBookById } from "@/lib/bookApi";
 import { useAuth } from "react-oidc-context";
 import { EditBookDialog } from "@/components/BookDialog";
+import { Book } from "@/types/book"
 
 export default function BookDetails() {
   const { id } = useParams();

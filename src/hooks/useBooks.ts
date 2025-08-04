@@ -11,9 +11,6 @@ import {
 import { useAuth } from "react-oidc-context";
 
 export const useBooks = () => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const token = auth.user?.access_token;
   const user = auth.user as {
@@ -21,6 +18,11 @@ export const useBooks = () => {
     name?: string;
     email?: string;
   };
+
+  // États pour la pagination, tri, recherche, etc.
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -30,7 +32,12 @@ export const useBooks = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchBooks = useCallback(async () => {
-    if (!token) return;
+    if (!auth.isAuthenticated || !token) {
+      setError("Utilisateur non authentifié");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       let data: PaginatedBooks;
@@ -42,7 +49,7 @@ export const useBooks = () => {
       setBooks(data.content);
       setTotalPages(data.totalPages);
       setTotalElements(data.totalElements);
-      // If current page is now empty and not first, go to previous page
+      // Si la page est vide et ce n'est pas la première page, on recule d'une page
       if (data.content.length === 0 && page > 0) {
         setPage(page - 1);
       }
@@ -52,7 +59,7 @@ export const useBooks = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, page, size, sort, searchQuery]);
+  }, [auth.isAuthenticated, token, page, size, sort, searchQuery]);
 
   useEffect(() => {
     fetchBooks();
@@ -65,18 +72,21 @@ export const useBooks = () => {
     description: string
   ) => {
     if (!token) throw new Error("No authentication token available");
-    // Use user info for utilisateurId
+
     const utilisateurLogin =
       user?.preferred_username || user?.name || user?.email || "utilisateur";
+
     const tempBook: Book = {
-      id: Date.now(), // Temporary ID
+      id: Date.now(), // ID temporaire
       bookTitle,
       utilisateurLogin,
       shelfId,
       pageCount: 0,
       description,
     };
+
     setBooks((prev) => [tempBook, ...prev]);
+
     try {
       const created = await createBook(bookTitle, shelfId, description, token);
       setBooks((prev) => [
@@ -91,22 +101,23 @@ export const useBooks = () => {
     }
   };
 
-  // Delete book with optimistic update
+  // Suppression d'un livre avec update optimiste
   const deleteBookById = async (bookId: number) => {
     if (!token) throw new Error("No authentication token available");
-    // Optimistically remove the book from the list
+
     const prevBooks = books;
     setBooks((prev) => prev.filter((b) => b.id !== bookId));
+
     try {
       await deleteBook(bookId, token);
     } catch (err) {
-      setBooks(prevBooks); // Rollback on error
+      setBooks(prevBooks); // rollback si erreur
       setError("Erreur lors de la suppression du livre");
       throw err;
     }
   };
 
-  // Edit book
+  // Modification d'un livre
   const editBook = async (
     bookId: number,
     bookTitle: string,
@@ -114,6 +125,7 @@ export const useBooks = () => {
     shelfId: number
   ) => {
     if (!token) throw new Error("No authentication token available");
+
     try {
       const updated = await updateBook(
         bookId,

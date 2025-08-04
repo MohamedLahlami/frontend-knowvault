@@ -28,7 +28,7 @@ interface OidcUser {
   preferred_username?: string;
   name?: string;
   email?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Mock shelves (copied from Shelves.tsx)
@@ -42,7 +42,7 @@ const shelves = [
 ];
 
 export interface CreateBookDialogProps {
-  onBookCreated?: (book: any) => void;
+  onBookCreated?: (book: unknown) => void;
   buttonClassName?: string;
   buttonVariant?: string;
   buttonChildren?: React.ReactNode;
@@ -55,7 +55,7 @@ export function CreateBookDialog({
   buttonChildren,
 }: CreateBookDialogProps) {
   const auth = useAuth();
-  const user = auth.user as OidcUser;
+  const user = auth.user as unknown as OidcUser;
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -109,7 +109,7 @@ export function CreateBookDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className={buttonClassName} variant={buttonVariant as any}>
+        <Button className={buttonClassName} variant={buttonVariant as never}>
           {buttonChildren || (
             <>
               <Plus className="h-4 w-4 mr-2" />

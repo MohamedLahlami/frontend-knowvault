@@ -7,10 +7,10 @@ import { useEffect, useState } from "react"
 import { getBookById } from "@/lib/bookApi"
 import { useAuth } from "react-oidc-context"
 import { EditBookDialog } from "@/components/CreateBookDialog"
-
+import { Book } from "@/types/book"
 export default function BookDetails() {
   const { id } = useParams()
-  const [book, setBook] = useState<any>(null)
+  const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const auth = useAuth()

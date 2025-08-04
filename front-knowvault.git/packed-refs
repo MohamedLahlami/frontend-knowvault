@@ -1,0 +1,21 @@
+# pack-refs with: peeled fully-peeled sorted 
+c96a99073447b69b2ba38000dc5b909181bada54 refs/heads/feat/edit-book-dialog
+19e6e2d30183f367895b1e0c24402e19cc409175 refs/heads/feature/createBook
+6bcd9d67c5c9d76ae9ba22134b1e1ea00955ef7f refs/heads/feature/delete-book
+727738cdd4aa03e9726e3d848be11383c62c5bda refs/heads/main
+32abcc6e9e122b0077e27ffc610b769f33f86520 refs/merge-requests/1/head
+3a61b668a322191e541a40923e669a4eab3a164c refs/merge-requests/1/merge
+89604131090ea1a8acec5d7a845f7025f0658e17 refs/merge-requests/2/head
+e4d34ab95c643f9e7a97dd70a198475f94224920 refs/merge-requests/2/merge
+6bcd9d67c5c9d76ae9ba22134b1e1ea00955ef7f refs/merge-requests/3/head
+38efe915ee5ede09d28f3e509d9fcc5a997bfff4 refs/merge-requests/3/merge
+575c56bc8f8755c5317ed5824f71fd49c6a662bb refs/merge-requests/4/head
+c59dda090d283f207e75ee78b2715c35c0877be0 refs/merge-requests/4/merge
+0e6048201e7b55acab51824a33ed860d309c6137 refs/merge-requests/5/head
+dc2547e762e9c98fef4db2cb9f88c70c8b32a701 refs/merge-requests/5/merge
+7e8119b623b9d7e596cf6ed3e2a6286742dfc7e9 refs/merge-requests/6/head
+4226b77154ec730d69897d095cf9dc9236eba6f8 refs/merge-requests/6/merge
+19e6e2d30183f367895b1e0c24402e19cc409175 refs/merge-requests/7/head
+34155f0fc7723505897f1a272f0a986fc59ea544 refs/merge-requests/7/merge
+c96a99073447b69b2ba38000dc5b909181bada54 refs/merge-requests/8/head
+f430c79befba4980d15f0e9d508e9ca152fdbd4d refs/merge-requests/8/merge

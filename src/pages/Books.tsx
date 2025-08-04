@@ -22,6 +22,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { Book as BookType } from "@/types/book";
 
 export default function Books() {
   const {
@@ -52,7 +53,8 @@ export default function Books() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [editBookDialog, setEditBookDialog] = useState<{
     open: boolean;
-    book: any | null;
+    book: BookType | null;
+
   }>({ open: false, book: null });
   // Remove search and setSearch
 
@@ -230,7 +232,7 @@ export default function Books() {
                           {book.description}
                         </CardDescription>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Utilisateur ID: {book.utilisateurLogin}</span>
+                          <span>Auteur: {book.utilisateurLogin}</span>
                           <Badge variant="secondary">
                             Étagère : {book.shelfId}
                           </Badge>

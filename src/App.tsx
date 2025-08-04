@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { oidcConfig } from "@/lib/oidcConfig";
 
+
 // Public pages (no authentication required)
 import PublicBooks from "./pages/PublicBooks";
 import PublicShelves from "./pages/PublicShelves";
@@ -19,6 +20,9 @@ import Shelves from "./pages/Shelves";
 import Books from "./pages/Books";
 import NotFound from "./pages/NotFound";
 import BookDetails from "./pages/BookDetails";
+import Chapters from "./pages/chapters";
+import Pages from "./pages/pages";
+import PageDetails from "./pages/PageDetails";
 import CreateShelf from "@/pages/CreateShelf.tsx";
 import EditShelf from "@/pages/EditShelf.tsx";
 
@@ -41,6 +45,7 @@ const App = () => (
               <Route path="/public-shelves" element={<PublicShelves />} />
               
               {/* Protected routes - require authentication */}
+             
               <Route 
                 path="/dashboard" 
                 element={
@@ -80,6 +85,33 @@ const App = () => (
                     <Books />
                   </ProtectedRoute>
                 } 
+              />
+              <Route 
+  path="/chapter/:id/pages"
+  element={
+    <ProtectedRoute>
+      <Pages />
+    </ProtectedRoute>
+  }
+/>
+<Route 
+  path="/chapters/:id"
+  element={
+    <ProtectedRoute>
+      <Pages />
+    </ProtectedRoute>
+  }
+/>
+<Route path="/page/:pageId" element={<PageDetails />} />
+
+
+              <Route 
+                path="/chapters"
+                element={
+                  <ProtectedRoute>
+                    <Chapters/>
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/books/:id"

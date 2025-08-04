@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { ListTree, Plus, Search, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +24,9 @@ import { ChapterModal } from "@/components/ChapterModal";
 
 export default function Chapters() {
   const auth = useAuth();
-  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
+  const [selectedChapterId, setSelectedChapterId] = useState<number | null>(
+    null
+  );
   const [openDialog, setOpenDialog] = useState(false);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
@@ -65,7 +62,7 @@ export default function Chapters() {
           getPages(auth.user.access_token),
         ]);
         setChapters(chaptersData);
-        setBooks(booksData);
+        setBooks(booksData.content); //TODO: hada rah potential problem mn b3d 7it pagination is implemented differently 3la kif mdioura f Pages
         setPages(pagesData);
       } catch (error) {
         console.error("Erreur lors du chargement :", error);
@@ -123,13 +120,21 @@ export default function Chapters() {
       {/* Affichage groupé par livre */}
       {chaptersByBook.map(({ book, chapters }) => (
         <div key={book.id} className="space-y-4">
-          <h2 className="text-2xl font-semibold text-primary"><br/>{book.bookTitle}</h2>
+          <h2 className="text-2xl font-semibold text-primary">
+            <br />
+            {book.bookTitle}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {chapters.map((chapter) => {
-              const pageCount = pages.filter((p) => p.chapterId === chapter.id).length;
+              const pageCount = pages.filter(
+                (p) => p.chapterId === chapter.id
+              ).length;
 
               return (
-                <Card key={chapter.id} className="hover:shadow-md transition-all duration-200 h-full flex flex-col relative">
+                <Card
+                  key={chapter.id}
+                  className="hover:shadow-md transition-all duration-200 h-full flex flex-col relative"
+                >
                   <div className="absolute top-5 right-8 bg-primary text-white px-3 py-1 rounded-full text-sm font-bold z-10 shadow">
                     {pageCount} pages
                   </div>
@@ -154,8 +159,15 @@ export default function Chapters() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" asChild>
-                      <Link to={`/chapters/${chapter.id}`}>Consulter les pages</Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      asChild
+                    >
+                      <Link to={`/chapters/${chapter.id}`}>
+                        Consulter les pages
+                      </Link>
                     </Button>
 
                     <ChapterModal
@@ -166,10 +178,16 @@ export default function Chapters() {
                       initialBookId={chapter.bookId}
                       onUpdated={async () => {
                         if (!auth.user) return;
-                        const updated = await getChapters(auth.user.access_token);
+                        const updated = await getChapters(
+                          auth.user.access_token
+                        );
                         setChapters(updated);
                       }}
-                      trigger={<Button variant="outline" size="sm">Modifier</Button>}
+                      trigger={
+                        <Button variant="outline" size="sm">
+                          Modifier
+                        </Button>
+                      }
                     />
 
                     <Button
@@ -195,7 +213,8 @@ export default function Chapters() {
             <DialogTitle>Confirmer la suppression</DialogTitle>
             <DialogDescription>
               <br />
-              Êtes-vous sûr de vouloir supprimer ce chapitre ? Cette action est irréversible.
+              Êtes-vous sûr de vouloir supprimer ce chapitre ? Cette action est
+              irréversible.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-3">

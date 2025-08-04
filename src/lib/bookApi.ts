@@ -33,6 +33,7 @@ export const getBooks = async (
 export const createBook = async (
   bookTitle: string,
   shelfId: number,
+  description: string,
   token: string
 ): Promise<Book> => {
   return await apiService.post<Book>(
@@ -40,6 +41,7 @@ export const createBook = async (
     {
       bookTitle,
       shelfId,
+      description,
     },
     {
       requireAuth: true,

@@ -10,8 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CreateBookDialog } from "@/components/CreateBookDialog";
-import { EditBookDialog } from "@/components/CreateBookDialog";
+import { CreateBookDialog } from "@/components/BookDialog";
+import { EditBookDialog } from "@/components/BookDialog";
 import { useBooks } from "@/hooks/useBooks";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,7 +22,23 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { useGetShelfById } from "@/hooks/useShelves";
 import { Book as BookType } from "@/types/book";
+
+// Component to display shelf label with proper loading state
+function ShelfLabel({ shelfId }: { shelfId: number }) {
+  const { shelf, loading, error } = useGetShelfById(shelfId);
+
+  if (loading) {
+    return <span>Chargement...</span>;
+  }
+
+  if (error || !shelf) {
+    return <span>Étagère inconnue</span>;
+  }
+
+  return <span>{shelf.label}</span>;
+}
 
 export default function Books() {
   const {
@@ -54,7 +70,6 @@ export default function Books() {
   const [editBookDialog, setEditBookDialog] = useState<{
     open: boolean;
     book: BookType | null;
-
   }>({ open: false, book: null });
   // Remove search and setSearch
 
@@ -234,11 +249,11 @@ export default function Books() {
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>Auteur: {book.utilisateurLogin}</span>
                           <Badge variant="secondary">
-                            Étagère : {book.shelfId}
+                            Étagère : <ShelfLabel shelfId={book.shelfId} />
                           </Badge>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            {book.updatedAt}
+                            {book.createdAt?.slice(0, 10)}
                           </span>
                         </div>
                       </div>

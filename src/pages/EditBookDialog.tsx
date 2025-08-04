@@ -3,41 +3,43 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Book } from "@/types/book";
 import { Shelf } from "@/types/shelf";
+import { Book as BookType } from "@/types/book";
 
-export function EditBookDialog({ bookId }: { bookId: string }) {
-  const [book, setBook] = useState<Book | null>(null);
+interface EditBookDialogProps {
+  book: BookType;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onBookEdited: () => void;
+}
+
+export function EditBookDialog({
+  book,
+  open,
+  onOpenChange,
+  onBookEdited,
+}: EditBookDialogProps) {
   const [shelves, setShelves] = useState<Shelf[]>([]);
-  const [open, setOpen] = useState(false);
 
   const [form, setForm] = useState({
-    bookTitle: "",
-    shelfId: "",
+    bookTitle: book.bookTitle || "",
+    shelfId: String(book.shelfId || ""),
   });
 
-   useEffect(() => {
+  useEffect(() => {
     if (open) {
-      axios
-        .get<Book>(`http://localhost:8081/api/book/${bookId}`)
-        .then((res) => {
-          const bookData = res.data;
-          setBook(bookData);
-          setForm({
-            bookTitle: bookData.bookTitle || "",
-            shelfId: String(bookData.shelfId || ""),
-          });
-        })
-        .catch((err) => {
-          console.error("Erreur lors du chargement du livre :", err);
-        });
+      // On initialise le formulaire avec les données du livre
+      setForm({
+        bookTitle: book.bookTitle || "",
+        shelfId: String(book.shelfId || ""),
+      });
 
+      // On charge les étagères
       axios
         .get<Shelf[]>("http://localhost:8081/api/shelf")
         .then((res) => {
@@ -47,9 +49,11 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
           console.error("Erreur lors du chargement des étagères :", err);
         });
     }
-  }, [open, bookId]);
+  }, [open, book]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -58,32 +62,27 @@ export function EditBookDialog({ bookId }: { bookId: string }) {
       alert("Le titre du livre est requis.");
       return;
     }
-  
+
     const payload: { bookTitle: string; shelfId?: number } = {
       bookTitle: form.bookTitle,
     };
-  
+
     if (form.shelfId) {
       payload.shelfId = Number(form.shelfId);
     }
-  
+
     try {
-      await axios.put(`http://localhost:8081/api/book/${bookId}`, payload);
-      setOpen(false);
-      window.location.reload();
+      await axios.put(`http://localhost:8081/api/book/${book.id}`, payload);
+      onOpenChange(false);
+      onBookEdited();
     } catch (err) {
       console.error("Erreur lors de la mise à jour :", err);
       alert("Une erreur est survenue lors de la mise à jour.");
     }
   };
-  
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Modifier
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier le livre</DialogTitle>

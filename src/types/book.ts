@@ -3,4 +3,8 @@ export interface Book {
     bookTitle: string;
     utilisateurLogin: string;
     shelfId: number;
+    pageCount: number;
+    createdAt?: string;
+    updatedAt?: string;
+    description?: string;
 }

@@ -23,6 +23,8 @@ import BookDetails from "./pages/BookDetails";
 import Chapters from "./pages/chapters";
 import Pages from "./pages/pages";
 import PageDetails from "./pages/PageDetails";
+import CreateShelf from "@/pages/CreateShelf.tsx";
+import EditShelf from "@/pages/EditShelf.tsx";
 
 const queryClient = new QueryClient();
 
@@ -52,14 +54,30 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/shelves" 
+              <Route
+                path="/shelves"
                 element={
                   <ProtectedRoute>
                     <Shelves />
                   </ProtectedRoute>
-                } 
+                }
               />
+                <Route
+                    path="/shelves/new"
+                    element={
+                        <ProtectedRoute>
+                            <CreateShelf />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/shelves/:id/edit"
+                    element={
+                        <ProtectedRoute>
+                            <EditShelf />
+                        </ProtectedRoute>
+                    }
+                />
               <Route 
                 path="/books" 
                 element={

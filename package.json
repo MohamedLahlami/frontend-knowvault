@@ -59,7 +59,8 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.26.2",
     "showdown": "^2.1.0",
-    "sonner": "^1.5.0",
+    "recharts": "^3.1.0",
+     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "turndown": "^7.2.0"

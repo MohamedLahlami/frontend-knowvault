@@ -52,7 +52,7 @@ export function ChapterModal({
     });
 
     getBooks(token)
-      .then((data) => setBooks(data))
+      .then((data) => setBooks(data.content))
       .catch(console.error);
   }, [open, token, initialTitle, initialBookId]);
 

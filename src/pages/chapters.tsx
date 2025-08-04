@@ -65,7 +65,7 @@ export default function Chapters() {
           getPages(auth.user.access_token),
         ]);
         setChapters(chaptersData);
-        setBooks(booksData);
+        setBooks(booksData.content);
         setPages(pagesData);
       } catch (error) {
         console.error("Erreur lors du chargement :", error);

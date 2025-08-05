@@ -1,4 +1,4 @@
-import { Book, BookOpen, FileText , Plus } from "lucide-react";
+import { Book, BookOpen, FileText, Plus, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -16,18 +16,22 @@ import DashboardPageModal from "@/components/DashboardPageModal";
 import { useState } from "react";
 import { Page } from "@/types/page";
 import { useAuth } from "react-oidc-context";
+
 export default function Dashboard() {
-  const { dashboard, loading, error } = useDashboard();
+  const { dashboard, loading, error, refreshDashboard } = useDashboard();
   const auth = useAuth();
+
   const tagData = [
     { name: "DEVOPS", value: 12 },
     { name: "MOBILE", value: 8 },
     { name: "KOTLIN", value: 5 },
     { name: "JAVA", value: 10 },
   ];
+
   const [showPageModal, setShowPageModal] = useState(false);
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50"];
   const token = auth.user?.access_token ?? "";
+
   const stats = [
     {
       title: "Étagères",
@@ -44,7 +48,7 @@ export default function Dashboard() {
     {
       title: "Pages",
       count: dashboard?.totalPages ?? 0,
-      icon:  FileText,
+      icon: FileText,
       color: "text-purple-600",
     },
   ];
@@ -67,14 +71,15 @@ export default function Dashboard() {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Tableau de bord
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">Tableau de bord</h1>
           <p className="text-muted-foreground mt-1">
             Gérez votre base de connaissances et documentation
           </p>
         </div>
-        <Button className="bg-accent hover:bg-accent/90">
+        <Button
+          className="bg-accent hover:bg-accent/90"
+          onClick={() => setShowPageModal(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nouveau contenu
         </Button>
@@ -97,6 +102,7 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Livres récents et étagères */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Livres récents */}
         <Card>
@@ -139,9 +145,7 @@ export default function Dashboard() {
               <BookOpen className="h-5 w-5 text-primary" />
               Étagères avec le plus de livres
             </CardTitle>
-            <CardDescription>
-              Collections contenant le plus de livres
-            </CardDescription>
+            <CardDescription>Collections contenant le plus de livres</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {dashboard?.topShelves.map((shelf, index) => (
@@ -197,35 +201,34 @@ export default function Dashboard() {
                 </>
               }
             />
-<DashboardPageModal
-  isOpen={showPageModal}
-  onClose={() => setShowPageModal(false)}
-  onCreated={(newPage: Page) => {
-    // handle newly created page if needed
-  }}
-  token={token}
-/>
-<Button
-  variant="outline"
-  className="h-20 flex-col space-y-2 w-full"
-  onClick={() => setShowPageModal(true)}
->
-  <Plus className="h-6 w-6" />
-  <span>Nouvelle page</span>
-</Button>
-
+            <DashboardPageModal
+              isOpen={showPageModal}
+              onClose={() => setShowPageModal(false)}
+              onCreated={(newPage: Page) => {
+                refreshDashboard();
+              }}
+              token={token}
+            />
+            <Button
+              variant="outline"
+              className="h-20 flex-col space-y-2 w-full"
+              onClick={() => setShowPageModal(true)}
+            >
+              <Plus className="h-6 w-6" />
+              <span>Nouvelle page</span>
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Graphiques camembert et barres */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Répartition des Tags (Camembert)
             </CardTitle>
-            <CardDescription>
-              Distribution des types de tags dans la base
-            </CardDescription>
+            <CardDescription>Distribution des types de tags dans la base</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">

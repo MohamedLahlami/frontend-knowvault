@@ -62,7 +62,7 @@ export default function Chapters() {
           getPages(auth.user.access_token),
         ]);
         setChapters(chaptersData);
-        setBooks(booksData.content); //TODO: hada rah potential problem mn b3d 7it pagination is implemented differently 3la kif mdioura f Pages
+        setBooks(booksData.content); 
         setPages(pagesData);
       } catch (error) {
         console.error("Erreur lors du chargement :", error);

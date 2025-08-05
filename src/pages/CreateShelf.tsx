@@ -5,7 +5,7 @@ import {Tag} from "@/types/shelf.ts";
 import {useCreateShelf} from "@/hooks/useShelves.ts";
 import {useNavigate} from "react-router-dom";
 import AlertDialog from "@/components/AlertDialog";
-import {BookOpen, Check, FileText, Hash, Loader2} from "lucide-react";
+import {AlertCircle, BookOpen, Check, FileText, Hash, Loader2} from "lucide-react";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 

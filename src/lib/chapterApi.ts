@@ -32,19 +32,15 @@ export async function updateChapter(
 export const getChaptersByBookId = async (
   bookId: number,
   token: string
-) => {
-  const res = await fetch(`http://localhost:8081/api/chapter/book/${bookId}/chapters`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Erreur ${res.status} lors du chargement des chapitres`);
-  }
-
-  return res.json();
-};
+): Promise<Chapter[]> => {
+  return await apiService.get<Chapter[]>(
+    `/api/chapter/book/${bookId}/chapters`,  // <-- corriger ici
+    {
+      requireAuth: true,
+      token,
+    }
+  );
+}
 
 export async function createChapter(title: string, bookId: number, token: string): Promise<Chapter> {
   const response = await apiService.post<Chapter>(

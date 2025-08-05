@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Book, BookOpen, FileText, Plus } from "lucide-react";
+import { Book, BookOpen, FileText , Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -9,41 +8,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreateBookDialog } from "@/components/CreateBookDialog";
+import { CreateBookDialog } from "@/components/BookDialog";
 import { useDashboard } from "@/hooks/useDashboard";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-} from "recharts";
-import DashboardCreatePageModal from "@/components/DashboardCreatePageModal";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis } from "recharts";
+import DashboardPageModal from "@/components/DashboardPageModal";
+import { useState } from "react";
 import { Page } from "@/types/page";
-
+import { useAuth } from "react-oidc-context";
 export default function Dashboard() {
   const { dashboard, loading, error } = useDashboard();
-
-  // Récupération du token stocké côté client (localStorage)
-  const token = localStorage.getItem("access_token") || "";
-
-  const [isCreatePageModalOpen, setIsCreatePageModalOpen] = useState(false);
-
+  const auth = useAuth();
   const tagData = [
     { name: "DEVOPS", value: 12 },
     { name: "MOBILE", value: 8 },
     { name: "KOTLIN", value: 5 },
     { name: "JAVA", value: 10 },
   ];
-
+  const [showPageModal, setShowPageModal] = useState(false);
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50"];
-
+  const token = auth.user?.access_token ?? "";
   const stats = [
     {
       title: "Étagères",
@@ -60,7 +44,7 @@ export default function Dashboard() {
     {
       title: "Pages",
       count: dashboard?.totalPages ?? 0,
-      icon: FileText,
+      icon:  FileText,
       color: "text-purple-600",
     },
   ];
@@ -79,28 +63,20 @@ export default function Dashboard() {
       timeStyle: "short",
     }).format(new Date(iso));
 
-  // Callback quand une page est créée avec succès
-  const handlePageCreated = (newPage: Page) => {
-    // Tu peux ici faire un rafraîchissement ou notification si besoin
-    // Par exemple, recharger le dashboard ou afficher un message
-    console.log("Page créée :", newPage);
-  };
-
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Tableau de bord</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Tableau de bord
+          </h1>
           <p className="text-muted-foreground mt-1">
             Gérez votre base de connaissances et documentation
           </p>
         </div>
-        <Button
-          className="bg-accent hover:bg-accent/90"
-          onClick={() => setIsCreatePageModalOpen(true)}
-        >
+        <Button className="bg-accent hover:bg-accent/90">
           <Plus className="h-4 w-4 mr-2" />
-          Nouvelle page
+          Nouveau contenu
         </Button>
       </div>
 
@@ -163,7 +139,9 @@ export default function Dashboard() {
               <BookOpen className="h-5 w-5 text-primary" />
               Étagères avec le plus de livres
             </CardTitle>
-            <CardDescription>Collections contenant le plus de livres</CardDescription>
+            <CardDescription>
+              Collections contenant le plus de livres
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {dashboard?.topShelves.map((shelf, index) => (
@@ -199,7 +177,11 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-20 flex-col space-y-2" asChild>
+            <Button
+              variant="outline"
+              className="h-20 flex-col space-y-2"
+              asChild
+            >
               <Link to="/shelves/new">
                 <BookOpen className="h-6 w-6" />
                 <span>Nouvelle étagère</span>
@@ -215,26 +197,35 @@ export default function Dashboard() {
                 </>
               }
             />
-            {/* Bouton ouvrant le modal de création de page */}
-            <Button
-              variant="outline"
-              className="h-20 flex-col space-y-2"
-              onClick={() => setIsCreatePageModalOpen(true)}
-            >
-              <Plus className="h-6 w-6" />
-              <span>Nouvelle page</span>
-            </Button>
+<DashboardPageModal
+  isOpen={showPageModal}
+  onClose={() => setShowPageModal(false)}
+  onCreated={(newPage: Page) => {
+    // handle newly created page if needed
+  }}
+  token={token}
+/>
+<Button
+  variant="outline"
+  className="h-20 flex-col space-y-2 w-full"
+  onClick={() => setShowPageModal(true)}
+>
+  <Plus className="h-6 w-6" />
+  <span>Nouvelle page</span>
+</Button>
+
           </div>
         </CardContent>
       </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               Répartition des Tags (Camembert)
             </CardTitle>
-            <CardDescription>Distribution des types de tags dans la base</CardDescription>
+            <CardDescription>
+              Distribution des types de tags dans la base
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -290,13 +281,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Modal création page */}
-      <DashboardCreatePageModal
-        isOpen={isCreatePageModalOpen}
-        onClose={() => setIsCreatePageModalOpen(false)}
-        onCreated={handlePageCreated}
-      />
     </div>
   );
 }

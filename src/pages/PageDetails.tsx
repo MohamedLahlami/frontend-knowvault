@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getPageById, getPagesByChapterId, updatePage } from "@/lib/pageApi";
-import { Page ,PageStatus} from "@/types/page";
+import { Page, PageStatus } from "@/types/page";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronLeft, ChevronRight, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Edit2, Save, X, Star, StarOff } from "lucide-react";
 import { marked } from "marked";
 import { useAuth } from "react-oidc-context";
 import MarkdownEditor from "@/components/MarkdownEditor";
-
+import { getFavoritesByUser, toggleFavoriteApi } from "@/lib/favoriteApi";
 marked.setOptions({ gfm: true, breaks: true });
-
 export default function PageDetails() {
   const { pageId } = useParams();
   const auth = useAuth();
@@ -22,6 +21,7 @@ export default function PageDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState<PageStatus>(PageStatus.Draft);
   const [markDownContent, setMarkDownContent] = useState<string>("");
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     const fetchPageAndPages = async () => {
@@ -32,10 +32,16 @@ export default function PageDetails() {
         const pageData = await getPageById(Number(pageId), auth.user.access_token);
         setPage(pageData);
         setMarkDownContent(pageData.markDownContent || "");
+        setStatus(pageData.status);
 
         const pagesOfChapter = await getPagesByChapterId(pageData.chapterId, auth.user.access_token);
         pagesOfChapter.sort((a, b) => a.pageNumber - b.pageNumber);
         setChapterPages(pagesOfChapter);
+
+        // Charger les favoris et définir l'état isFavorite
+        const favoritesData = await getFavoritesByUser(auth.user.access_token);
+        setIsFavorite(favoritesData.some(fav => fav.pageId === pageData.id));
+
       } catch (err) {
         console.error("Erreur de chargement :", err);
         setError("Impossible de charger cette page.");
@@ -62,7 +68,8 @@ export default function PageDetails() {
         page.id,
         {
           content: htmlFromMarkdown,
-          markDownContent: markDownContent,status: status,
+          markDownContent: markDownContent,
+          status: status,
         },
         auth.user.access_token
       );
@@ -71,6 +78,7 @@ export default function PageDetails() {
         ...page,
         content: htmlFromMarkdown,
         markDownContent: markDownContent,
+        status: status,
       });
 
       setIsEditing(false);
@@ -82,9 +90,19 @@ export default function PageDetails() {
     }
   };
 
+  const toggleFavorite = async () => {
+    if (!auth.user || !page) return;
+    try {
+      const result = await toggleFavoriteApi(page.id, auth.user.access_token);
+      setIsFavorite(result !== null);
+    } catch (err) {
+      console.error("Erreur lors du toggle favori :", err);
+    }
+  };
+
   const renderContent = () => {
     if (!page) return null;
-    const html = page.content || "";  console.log("HTML à afficher :", html);  
+    const html = page.content || "";
     return (
       <div
         className="prose max-w-none bg-white p-6 rounded-lg shadow mt-4"
@@ -123,7 +141,22 @@ export default function PageDetails() {
         </Link>
       </Button>
 
-      <h1 className="text-4xl font-bold">Page {page.pageNumber}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-4xl font-bold">Page {page.pageNumber}</h1>
+        <button
+          onClick={toggleFavorite}
+          aria-label="Toggle favorite"
+          className="ml-4"
+          title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+        >
+          {isFavorite ? (
+            <Star className="w-8 h-8 fill-yellow-400 text-yellow-500 hover:scale-110 transition-transform cursor-pointer" />
+          ) : (
+            <StarOff className="w-8 h-8 text-gray-400 hover:text-yellow-500 hover:scale-110 transition-transform cursor-pointer" />
+          )}
+        </button>
+      </div>
+
       <p className="text-muted-foreground">Statut : {page.status}</p>
 
       <div className="flex gap-4 my-4">
@@ -161,21 +194,21 @@ export default function PageDetails() {
             initialMarkdown={markDownContent}
             onChange={setMarkDownContent}
           />
-<div>
-  <label htmlFor="status" className="block mb-1 font-medium">
-    Statut
-  </label>
-  <select
-    id="status"
-    className="w-full border px-3 py-2 rounded"
-    value={status}
-    onChange={(e) => setStatus(e.target.value as Page["status"])}
-  >
-     <option value="DRAFT">Brouillon</option>
-    <option value="PUBLISHED">Publié</option>
-    <option value="ARCHIVED">Archivé</option>
-  </select>
-</div>
+          <div>
+            <label htmlFor="status" className="block mb-1 font-medium">
+              Statut
+            </label>
+            <select
+              id="status"
+              className="w-full border px-3 py-2 rounded"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Page["status"])}
+            >
+              <option value="DRAFT">Brouillon</option>
+              <option value="PUBLISHED">Publié</option>
+              <option value="ARCHIVED">Archivé</option>
+            </select>
+          </div>
 
           <div className="flex gap-4 mt-4">
             <Button

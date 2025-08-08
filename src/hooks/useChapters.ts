@@ -8,6 +8,7 @@ export function useChapters() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetch = async () => {
@@ -19,7 +20,11 @@ export function useChapters() {
 
       try {
         const data = await getChapters(auth.user.access_token);
-       setChapters(data);
+        // Filtrage local (si pas supporté côté API)
+        const filtered = data.filter((chapter) =>
+          chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setChapters(filtered);
       } catch (e) {
         console.error(e);
         setError("Erreur lors du chargement");
@@ -29,7 +34,13 @@ export function useChapters() {
     };
 
     fetch();
-  }, [auth]);
+  }, [auth, searchQuery]); // 👈 recherche déclenche un nouveau fetch
 
-  return { chapters, loading, error };
+  return {
+    chapters,
+    loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+  };
 }

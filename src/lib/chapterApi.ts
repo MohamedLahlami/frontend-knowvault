@@ -29,6 +29,18 @@ export async function updateChapter(
     token: token,
   });
 }
+export const getChaptersByBookId = async (
+  bookId: number,
+  token: string
+): Promise<Chapter[]> => {
+  return await apiService.get<Chapter[]>(
+    `/api/chapter/book/${bookId}/chapters`,  // <-- corriger ici
+    {
+      requireAuth: true,
+      token,
+    }
+  );
+}
 
 export async function createChapter(title: string, bookId: number, token: string): Promise<Chapter> {
   const response = await apiService.post<Chapter>(

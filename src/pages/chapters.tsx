@@ -32,7 +32,7 @@ export default function Chapters() {
   const [books, setBooks] = useState<Book[]>([]);
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const handleDelete = (id: number) => {
     setSelectedChapterId(id);
     setOpenDialog(true);
@@ -62,7 +62,7 @@ export default function Chapters() {
           getPages(auth.user.access_token),
         ]);
         setChapters(chaptersData);
-        setBooks(booksData.content); //TODO: hada rah potential problem mn b3d 7it pagination is implemented differently 3la kif mdioura f Pages
+        setBooks(booksData.content);
         setPages(pagesData);
       } catch (error) {
         console.error("Erreur lors du chargement :", error);
@@ -77,12 +77,17 @@ export default function Chapters() {
   if (loading) {
     return <p className="p-6">Chargement...</p>;
   }
-
-  // Regrouper les chapitres par livre
-  const chaptersByBook = books.map((book) => ({
-    book,
-    chapters: chapters.filter((ch) => ch.bookId === book.id),
-  }));
+  const filteredChapters = chapters.filter((chapter) =>
+      chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const chaptersByBook = books
+      .map((book) => {
+        const bookChapters = filteredChapters.filter((ch) => ch.bookId === book.id);
+        return bookChapters.length > 0
+            ? { book, chapters: bookChapters }
+            : null;
+      })
+      .filter((item): item is { book: Book; chapters: Chapter[] } => item !== null);
 
   return (
       <div className="p-6 space-y-6 animate-fade-in">
@@ -114,7 +119,13 @@ export default function Chapters() {
         {/* Search */}
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Rechercher un chapitre..." className="pl-10" />
+          <Input
+              placeholder="Rechercher un chapitre..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
         </div>
 
         {/* Affichage groupé par livre */}

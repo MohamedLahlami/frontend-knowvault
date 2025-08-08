@@ -14,8 +14,7 @@ import {
   ChevronRight,
   Edit2,
   Save,
-  X,
-  Star,
+  X,  Star,
   StarOff,
 } from "lucide-react";
 import { marked } from "marked";
@@ -23,7 +22,6 @@ import { useAuth } from "react-oidc-context";
 import MarkdownEditor from "@/components/MarkdownEditor";
 import { getFavoritesByUser, toggleFavoriteApi } from "@/lib/favoriteApi";
 import html2pdf from "html2pdf.js";
-
 marked.setOptions({ gfm: true, breaks: true });
 
 export default function PageDetails() {
@@ -76,7 +74,6 @@ export default function PageDetails() {
     fetchPageAndPages();
   }, [pageId, auth.user]);
 
-  // Auto-export PDF si export=pdf dans l'URL
   useEffect(() => {
     if (
       searchParams.get("export") === "pdf" &&
@@ -142,7 +139,6 @@ export default function PageDetails() {
       console.error("Erreur lors du toggle favori :", err);
     }
   };
-
   const handleDownloadPDF = () => {
     if (!contentRef.current) return;
     const opt = {
@@ -158,6 +154,7 @@ export default function PageDetails() {
   const renderContent = () => {
     if (!page) return null;
     const html = page.content || "";
+    console.log("HTML à afficher :", html);
     return (
       <div
         className="prose max-w-none bg-white p-6 rounded-lg shadow mt-4"
@@ -265,8 +262,7 @@ export default function PageDetails() {
               className="w-full border px-3 py-2 rounded"
               value={status}
               onChange={(e) => setStatus(e.target.value as Page["status"])}
-            >
-              <option value="Draft">Brouillon</option>
+            > <option value="Draft">Brouillon</option>
               <option value="Published">Publié</option>
               <option value="Archived">Archivé</option>
             </select>
@@ -294,7 +290,6 @@ export default function PageDetails() {
           </div>
         </>
       )}
-
       {!isEditing && <div ref={contentRef}>{renderContent()}</div>}
     </div>
   );

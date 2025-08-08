@@ -5,13 +5,8 @@ import { getChapters } from "@/lib/chapterApi";
 import { Page } from "@/types/page";
 import { Chapter } from "@/types/chapter";
 import { useAuth } from "react-oidc-context";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { FavoriteDTO } from "@/types/favorite";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -32,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getFavoritesByUser, toggleFavoriteApi } from "@/lib/favoriteApi";
+import html2pdf from "html2pdf.js";
 
 export default function Pages() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,14 +42,10 @@ export default function Pages() {
   const toggleFavorite = async (pageId: number) => {
     if (!auth.user) return;
     try {
-      // Appel toggle backend, retourne DTO (favori créé) ou null (favori supprimé)
       const toggledFavorite = await toggleFavoriteApi(pageId, auth.user.access_token);
-
       if (toggledFavorite) {
-        // Favori ajouté
         setFavorites((prev) => [...prev, pageId]);
       } else {
-        // Favori supprimé
         setFavorites((prev) => prev.filter((favId) => favId !== pageId));
       }
     } catch (err) {
@@ -90,7 +82,7 @@ export default function Pages() {
     try {
       await deletePage(pageId, auth.user.access_token);
       setPages((prev) => prev.filter((p) => p.id !== pageId));
-      setFavorites((prev) => prev.filter((favId) => favId !== pageId)); // Optionnel : retirer des favoris si supprimé
+      setFavorites((prev) => prev.filter((favId) => favId !== pageId)); // Retirer des favoris si supprimé
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
     }
@@ -125,7 +117,6 @@ export default function Pages() {
   };
 
   const handleExportPDF = (pageId: number) => {
-    // Ouvre la page avec export=pdf en nouvel onglet
     window.open(`/page/${pageId}?export=pdf`, "_blank");
   };
 
@@ -191,7 +182,9 @@ export default function Pages() {
                   size="icon"
                   onClick={() => toggleFavorite(page.id)}
                   className="absolute top-2 right-2 hover:text-yellow-500"
-                  aria-label={favorites.includes(page.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                  aria-label={
+                    favorites.includes(page.id) ? "Retirer des favoris" : "Ajouter aux favoris"
+                  }
                   title={favorites.includes(page.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
                 >
                   {favorites.includes(page.id) ? (

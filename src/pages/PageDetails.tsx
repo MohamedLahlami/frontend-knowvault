@@ -74,6 +74,7 @@ export default function PageDetails() {
     fetchPageAndPages();
   }, [pageId, auth.user]);
 
+  // Auto-export PDF if URL contains export=pdf parameter
   useEffect(() => {
     if (
       searchParams.get("export") === "pdf" &&
@@ -290,6 +291,8 @@ export default function PageDetails() {
           </div>
         </>
       )}
+
+      {/* Rendered content with ref for PDF export */}
       {!isEditing && <div ref={contentRef}>{renderContent()}</div>}
     </div>
   );

@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getFavoritesByUser, toggleFavoriteApi } from "@/lib/favoriteApi";
+
 import html2pdf from "html2pdf.js";
 
 export default function Pages() {
@@ -61,9 +62,12 @@ export default function Pages() {
           getChapters(auth.user.access_token),
           getPagesByChapterId(Number(id), auth.user.access_token),
         ]);
-        const chapterFound = chapterList.find((c) => c.id === Number(id)) ?? null;
+        const chapterFound =
+          chapterList.find((c) => c.id === Number(id)) ?? null;
         setChapter(chapterFound);
-        const sortedPages = pageList.sort((a, b) => a.pageNumber - b.pageNumber);
+        const sortedPages = pageList.sort(
+          (a, b) => a.pageNumber - b.pageNumber
+        );
         setPages(sortedPages);
 
         const favoritesData: FavoriteDTO[] = await getFavoritesByUser(auth.user.access_token);
@@ -106,6 +110,7 @@ export default function Pages() {
   const getStatusColor = (status: PageStatus) => {
     switch (status) {
       case PageStatus.Draft:
+
         return "bg-red-300 text-red-800";
       case PageStatus.Published:
         return "bg-green-300 text-green-800";
@@ -119,7 +124,6 @@ export default function Pages() {
   const handleExportPDF = (pageId: number) => {
     window.open(`/page/${pageId}?export=pdf`, "_blank");
   };
-
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -127,6 +131,7 @@ export default function Pages() {
           <h1 className="text-3xl font-bold text-foreground">
             Pages du chapitre :{" "}
             <span className="text-primary">{chapter?.chapterTitle || "..."}</span>
+
           </h1>
           <p className="text-muted-foreground mt-1">
             Consultez et gérez les pages de ce chapitre
@@ -164,6 +169,7 @@ export default function Pages() {
         <p>Aucune page trouvée pour ce chapitre.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
           {filteredPages.map((page) => (
             <Card
               key={page.id}
@@ -174,8 +180,12 @@ export default function Pages() {
                   <FileText className="text-primary w-5 h-5" />
                 </div>
                 <div className="flex-grow">
-                  <CardTitle className="text-xl">Page {page.pageNumber}</CardTitle>
-                  <Badge className={getStatusColor(page.status)}>{page.status}</Badge>
+                  <CardTitle className="text-xl">
+                    Page {page.pageNumber}
+                  </CardTitle>
+                  <Badge className={getStatusColor(page.status)}>
+                    {page.status}
+                  </Badge>
                 </div>
                 <Button
                   variant="ghost"
@@ -206,6 +216,7 @@ export default function Pages() {
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
+
 
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleExportPDF(page.id)}>

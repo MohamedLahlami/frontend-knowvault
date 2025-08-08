@@ -261,7 +261,8 @@ export default function Chapters() {
               <Button className="flex items-center gap-2 bg-accent hover:bg-accent/90">
                 <Plus className="h-5 w-5" />
                 <span>Nouveau chapitre</span>
-              </Button> }
+              </Button>
+            }
           />
         </div>
       )}

@@ -1,42 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { ListTree, Plus, Search, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getChapters, deleteChapter } from "@/lib/chapterApi";
-import { getBooks } from "@/lib/bookApi";
-import { getPages } from "@/lib/pageApi";
-import { Chapter } from "@/types/chapter";
-import { Book } from "@/types/book";
-import { Page } from "@/types/page";
-import { useAuth } from "react-oidc-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Chapter } from "@/types/chapter";
+import { Book } from "@/types/book";
+import { useAuth } from "react-oidc-context";
+import { getChapters, deleteChapter } from "@/lib/chapterApi";
+import { getBooks } from "@/lib/bookApi";
+import { getPages } from "@/lib/pageApi";
+import { Page } from "@/types/page";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  ListTree,
-  Plus,
-  Search,
-  Trash,
-  MoreVertical,
-  Download,
-  Eye,
-  Edit,
-} from "lucide-react";
 import { ChapterModal } from "@/components/ChapterModal";
-import html2pdf from "html2pdf.js";
 
 export default function Chapters() {
   const auth = useAuth();
@@ -48,7 +32,7 @@ export default function Chapters() {
   const [books, setBooks] = useState<Book[]>([]);
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const handleDelete = (id: number) => {
     setSelectedChapterId(id);
     setOpenDialog(true);
@@ -93,80 +77,17 @@ export default function Chapters() {
   if (loading) {
     return <p className="p-6">Chargement...</p>;
   }
-
-  // Regrouper les chapitres par livre
-  const chaptersByBook = books.map((book) => ({
-    book,
-    chapters: chapters.filter((ch) => ch.bookId === book.id),
-  }));
-
-  const handleExportChapterPDF = async (
-    chapter: Chapter,
-    chapterPages: Page[]
-  ) => {
-    // Create a temporary container for all pages
-    const container = document.createElement("div");
-    container.style.padding = "20px";
-    container.style.fontFamily = "Arial, sans-serif";
-    container.className =
-      "prose max-w-none bg-white p-6 rounded-lg shadow mt-4";
-
-    // Sort pages by page number
-    const sortedPages = chapterPages.sort(
-      (a, b) => a.pageNumber - b.pageNumber
-    );
-
-    // Add each page to the container
-    sortedPages.forEach((page, index) => {
-      const pageDiv = document.createElement("div");
-      pageDiv.style.pageBreakAfter = "always";
-      pageDiv.style.marginBottom = "20px";
-
-      // Add header with chapter title and page number
-      const header = document.createElement("div");
-      header.style.borderBottom = "2px solid #333";
-      header.style.paddingBottom = "10px";
-      header.style.marginBottom = "20px";
-      header.style.fontSize = "18px";
-      header.style.fontWeight = "bold";
-      header.innerHTML = `${chapter.chapterTitle} - Page ${page.pageNumber}`;
-
-      // Add page content with proper styling
-      const content = document.createElement("div");
-      content.className = "prose max-w-none";
-      content.innerHTML = page.content || "";
-
-      pageDiv.appendChild(header);
-      pageDiv.appendChild(content);
-      container.appendChild(pageDiv);
-    });
-
-    // Remove page break from last page
-    if (container.lastChild) {
-      (container.lastChild as HTMLElement).style.pageBreakAfter = "auto";
-    }
-
-    // Add container to DOM temporarily
-    document.body.appendChild(container);
-
-    // Generate PDF
-    const opt = {
-      margin: 0.5,
-      filename: `chapter-${chapter.chapterTitle}-${
-        new Date().toISOString().split("T")[0]
-      }.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-    };
-
-    try {
-      await html2pdf().set(opt).from(container).save();
-    } finally {
-      // Clean up
-      document.body.removeChild(container);
-    }
-  };
+  const filteredChapters = chapters.filter((chapter) =>
+    chapter.chapterTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const chaptersByBook = books
+  .map((book) => {
+    const bookChapters = filteredChapters.filter((ch) => ch.bookId === book.id);
+    return bookChapters.length > 0
+      ? { book, chapters: bookChapters }
+      : null;
+  })
+  .filter((item): item is { book: Book; chapters: Chapter[] } => item !== null);
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -198,131 +119,103 @@ export default function Chapters() {
       {/* Search */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Rechercher un chapitre..." className="pl-10" />
+        <Input
+  placeholder="Rechercher un chapitre..."
+  className="pl-10"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+/>
+
       </div>
 
       {/* Affichage groupé par livre */}
-      {chaptersByBook.map(({ book, chapters }) => {
-        // Filter out chapters with no pages
-        const chaptersWithPages = chapters.filter((chapter) => {
-          const pageCount = pages.filter(
-            (p) => p.chapterId === chapter.id
-          ).length;
-          return pageCount > 0;
-        });
+      {chaptersByBook.map(({ book, chapters }) => (
+        <div key={book.id} className="space-y-4">
+          <h2 className="text-2xl font-semibold text-primary">
+            <br />
+            {book.bookTitle}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {chapters.map((chapter) => {
+              const pageCount = pages.filter(
+                (p) => p.chapterId === chapter.id
+              ).length;
 
-        // Only render book section if it has chapters with pages
-        if (chaptersWithPages.length === 0) return null;
-
-        return (
-          <div key={book.id} className="space-y-4">
-            <h2 className="text-2xl font-semibold text-primary">
-              <br />
-              {book.bookTitle}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {chaptersWithPages.map((chapter) => {
-                const pageCount = pages.filter(
-                  (p) => p.chapterId === chapter.id
-                ).length;
-
-                return (
-                  <Card
-                    key={chapter.id}
-                    className="hover:shadow-md transition-all duration-200 h-full flex flex-col relative"
-                  >
-                    <div className="absolute top-5 right-8 bg-primary text-white px-3 py-1 rounded-full text-sm font-bold z-10 shadow">
-                      {pageCount} pages
-                    </div>
-                    <CardHeader className="flex-grow">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-primary/10 rounded-lg">
-                          <ListTree className="h-6 w-6 text-primary" />
-                        </div>
-                        <div className="space-y-4">
-                          <CardTitle className="text-xxl">
-                            <Link
-                              to={`/chapters/${chapter.id}`}
-                              className="hover:text-primary transition-colors"
-                            >
-                              {chapter.chapterTitle}
-                            </Link>
-                          </CardTitle>
-                          <Badge variant="outline" className="text-primary">
-                            {book.bookTitle}
-                          </Badge>
-                        </div>
+              return (
+                <Card
+                  key={chapter.id}
+                  className="hover:shadow-md transition-all duration-200 h-full flex flex-col relative"
+                >
+                  <div className="absolute top-5 right-8 bg-primary text-white px-3 py-1 rounded-full text-sm font-bold z-10 shadow">
+                    {pageCount} pages
+                  </div>
+                  <CardHeader className="flex-grow">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <ListTree className="h-6 w-6 text-primary" />
                       </div>
-                    </CardHeader>
-                    <CardContent className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        asChild
-                      >
-                        <Link to={`/chapters/${chapter.id}`}>
-                          Consulter les pages
-                        </Link>
-                      </Button>
+                      <div className="space-y-4">
+                        <CardTitle className="text-xxl">
+                          <Link
+                            to={`/chapters/${chapter.id}`}
+                            className="hover:text-primary transition-colors"
+                          >
+                            {chapter.chapterTitle}
+                          </Link>
+                        </CardTitle>
+                        <Badge variant="outline" className="text-primary">
+                          {book.bookTitle}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      asChild
+                    >
+                      <Link to={`/chapters/${chapter.id}`}>
+                        Consulter les pages
+                      </Link>
+                    </Button>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              const chapterPages = pages.filter(
-                                (p) => p.chapterId === chapter.id
-                              );
-                              handleExportChapterPDF(chapter, chapterPages);
-                            }}
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Exporter en PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <ChapterModal
-                              mode="edit"
-                              token={auth.user.access_token}
-                              chapterId={chapter.id}
-                              initialTitle={chapter.chapterTitle}
-                              initialBookId={chapter.bookId}
-                              onUpdated={async () => {
-                                if (!auth.user) return;
-                                const updated = await getChapters(
-                                  auth.user.access_token
-                                );
-                                setChapters(updated);
-                              }}
-                              trigger={
-                                <div className="flex items-center">
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Modifier
-                                </div>
-                              }
-                            />
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(chapter.id)}
-                            className="text-red-600 focus:bg-red-600 focus:text-white"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    <ChapterModal
+                      mode="edit"
+                      token={auth.user.access_token}
+                      chapterId={chapter.id}
+                      initialTitle={chapter.chapterTitle}
+                      initialBookId={chapter.bookId}
+                      onUpdated={async () => {
+                        if (!auth.user) return;
+                        const updated = await getChapters(
+                          auth.user.access_token
+                        );
+                        setChapters(updated);
+                      }}
+                      trigger={
+                        <Button variant="outline" size="sm">
+                          Modifier
+                        </Button>
+                      }
+                    />
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="px-3"
+                      onClick={() => handleDelete(chapter.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
 
       {/* Dialog de confirmation */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>

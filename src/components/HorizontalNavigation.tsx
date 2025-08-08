@@ -1,4 +1,4 @@
-import { Book, BookOpen, Search,ListTree,Home, Settings, Plus, LogIn, LogOut, User, Library } from "lucide-react"
+import { Book, BookOpen,Star , Search,ListTree,Home, Settings, Plus, LogIn, LogOut, User, Library } from "lucide-react"
 import { NavLink, useLocation, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "react-oidc-context"
@@ -31,6 +31,7 @@ const protectedItems = [
   { title: "Étagères", url: "/shelves", icon: BookOpen },
   { title: "Livres", url: "/books", icon: Book },
   { title: "Chapitres", url: "/chapters", icon: ListTree  },
+  { title: "Favoris", url: "/favoris", icon: Star},
   { title: "Recherche", url: "/search", icon: Search},
  
 ]

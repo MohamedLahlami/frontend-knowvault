@@ -5,12 +5,15 @@ import { getChapters } from "@/lib/chapterApi";
 import { Page } from "@/types/page";
 import { Chapter } from "@/types/chapter";
 import { useAuth } from "react-oidc-context";
+import { FavoriteDTO } from "@/types/favorite";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   FileText,
   Trash,
+  Star,
+  StarOff,
   MoreVertical,
   Download,
 } from "lucide-react";
@@ -23,15 +26,33 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getFavoritesByUser, toggleFavoriteApi } from "@/lib/favoriteApi";
+
 import html2pdf from "html2pdf.js";
 
 export default function Pages() {
+  const [searchQuery, setSearchQuery] = useState("");
   const { id } = useParams();
   const auth = useAuth();
   const [pages, setPages] = useState<Page[]>([]);
   const [chapter, setChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [favorites, setFavorites] = useState<number[]>([]);
+
+  const toggleFavorite = async (pageId: number) => {
+    if (!auth.user) return;
+    try {
+      const toggledFavorite = await toggleFavoriteApi(pageId, auth.user.access_token);
+      if (toggledFavorite) {
+        setFavorites((prev) => [...prev, pageId]);
+      } else {
+        setFavorites((prev) => prev.filter((favId) => favId !== pageId));
+      }
+    } catch (err) {
+      console.error("Erreur lors du toggle favori :", err);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +69,9 @@ export default function Pages() {
           (a, b) => a.pageNumber - b.pageNumber
         );
         setPages(sortedPages);
+
+        const favoritesData: FavoriteDTO[] = await getFavoritesByUser(auth.user.access_token);
+        setFavorites(favoritesData.map((f) => f.pageId));
       } catch (error) {
         console.error("Erreur lors du chargement :", error);
       } finally {
@@ -62,31 +86,42 @@ export default function Pages() {
     try {
       await deletePage(pageId, auth.user.access_token);
       setPages((prev) => prev.filter((p) => p.id !== pageId));
+      setFavorites((prev) => prev.filter((favId) => favId !== pageId)); // Retirer des favoris si supprimé
     } catch (error) {
       console.error("Erreur lors de la suppression :", error);
     }
   };
+
+  const filteredPages = pages.filter((page) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      page.pageNumber.toString().includes(q) ||
+      page.status.toLowerCase().includes(q)
+      // Autres filtres possibles ici
+    );
+  });
 
   const handlePageCreated = (newPage: Page) => {
     setPages((prev) =>
       [...prev, newPage].sort((a, b) => a.pageNumber - b.pageNumber)
     );
   };
+
   const getStatusColor = (status: PageStatus) => {
     switch (status) {
       case PageStatus.Draft:
-        return "bg-red-300 text-red-800"; // lighter red bg, darker red text for contrast
+
+        return "bg-red-300 text-red-800";
       case PageStatus.Published:
-        return "bg-green-300 text-green-800"; // lighter green bg, darker green text
+        return "bg-green-300 text-green-800";
       case PageStatus.Archived:
-        return "bg-yellow-200 text-yellow-900"; // very light yellow bg, dark yellow text
+        return "bg-yellow-200 text-yellow-900";
       default:
-        return "bg-gray-200 text-gray-800"; // soft gray bg with dark gray text
+        return "bg-gray-200 text-gray-800";
     }
   };
 
-  const handleExportPDF = async (pageId: number) => {
-    // Navigate to the page and trigger PDF export
+  const handleExportPDF = (pageId: number) => {
     window.open(`/page/${pageId}?export=pdf`, "_blank");
   };
   return (
@@ -95,9 +130,8 @@ export default function Pages() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">
             Pages du chapitre :{" "}
-            <span className="text-primary">
-              {chapter?.chapterTitle || "..."}
-            </span>
+            <span className="text-primary">{chapter?.chapterTitle || "..."}</span>
+
           </h1>
           <p className="text-muted-foreground mt-1">
             Consultez et gérez les pages de ce chapitre
@@ -119,13 +153,24 @@ export default function Pages() {
         </Button>
       </div>
 
+      <div className="max-w-md mb-6">
+        <input
+          type="text"
+          placeholder="Rechercher une page par son numéro ou type ..."
+          className="w-full px-4 py-2 border rounded-md shadow-sm"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       {loading ? (
         <p>Chargement...</p>
-      ) : pages.length === 0 ? (
+      ) : filteredPages.length === 0 ? (
         <p>Aucune page trouvée pour ce chapitre.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pages.map((page) => (
+
+          {filteredPages.map((page) => (
             <Card
               key={page.id}
               className="relative flex flex-col hover:shadow-md transition-all duration-200"
@@ -142,17 +187,37 @@ export default function Pages() {
                     {page.status}
                   </Badge>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleFavorite(page.id)}
+                  className="absolute top-2 right-2 hover:text-yellow-500"
+                  aria-label={
+                    favorites.includes(page.id) ? "Retirer des favoris" : "Ajouter aux favoris"
+                  }
+                  title={favorites.includes(page.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  {favorites.includes(page.id) ? (
+                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-500" />
+                  ) : (
+                    <StarOff className="w-5 h-5 text-gray-400" />
+                  )}
+                </Button>
               </CardHeader>
+
               <CardContent className="flex justify-between items-center gap-2">
                 <Button variant="outline" size="sm" asChild>
                   <Link to={`/page/${page.id}`}>Voir le contenu</Link>
                 </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" aria-label="Options">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
+
+
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleExportPDF(page.id)}>
                       <Download className="mr-2 h-4 w-4" />

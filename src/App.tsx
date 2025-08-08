@@ -25,7 +25,7 @@ import Pages from "./pages/pages";
 import PageDetails from "./pages/PageDetails";
 import CreateShelf from "@/pages/CreateShelf.tsx";
 import EditShelf from "@/pages/EditShelf.tsx";
-
+import Favoris from "@/pages/Favoris";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -51,6 +51,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+               <Route 
+                path="/favoris" 
+                element={
+                  <ProtectedRoute>
+                    <Favoris />
                   </ProtectedRoute>
                 } 
               />

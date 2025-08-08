@@ -2,8 +2,14 @@ import { useEffect, useState } from "react";
 import { Book } from "@/types/book.ts";
 import { getBooks } from "@/lib/bookApi";
 import { useAuth } from "react-oidc-context";
-import {Shelf} from "@/types/shelf.ts";
-import {createShelf, deleteShelf, getShelfById, getShelves, updateShelf} from "@/lib/shelfApi.ts";
+import { Shelf } from "@/types/shelf.ts";
+import {
+    createShelf,
+    deleteShelf,
+    getShelfById,
+    getShelves,
+    updateShelf,
+} from "@/lib/shelfApi.ts";
 
 export const useShelves = () => {
     const auth = useAuth();
@@ -39,17 +45,25 @@ export const useShelves = () => {
         fetchShelves(page);
     }, [auth, page, searchTerm]);
 
-    return { shelves, loading, error, page, setPage, totalPages, refreshShelves: fetchShelves };
+    return {
+        shelves,
+        loading,
+        error,
+        page,
+        setPage,
+        totalPages,
+        refreshShelves: fetchShelves,
+    };
 };
-
-
 
 export const useCreateShelf = () => {
     const auth = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleCreateShelf = async (shelf: Partial<Shelf>): Promise<Shelf | null> => {
+    const handleCreateShelf = async (
+        shelf: Partial<Shelf>
+    ): Promise<Shelf | null> => {
         if (!auth.isAuthenticated || !auth.user) {
             setError("Utilisateur non authentifié");
             return null;
@@ -133,7 +147,10 @@ export const useEditShelf = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleEditShelf = async (id: number, shelfData: Partial<Shelf>): Promise<Shelf | null> => {
+    const handleEditShelf = async (
+        id: number,
+        shelfData: Partial<Shelf>
+    ): Promise<Shelf | null> => {
         if (!auth.isAuthenticated || !auth.user) {
             setError("Utilisateur non authentifié");
             return null;
@@ -141,7 +158,11 @@ export const useEditShelf = () => {
 
         setLoading(true);
         try {
-            const updatedShelf = await updateShelf(id, shelfData, auth.user.access_token);
+            const updatedShelf = await updateShelf(
+                id,
+                shelfData,
+                auth.user.access_token
+            );
             return updatedShelf;
         } catch (err) {
             console.error(err);

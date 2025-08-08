@@ -1,21 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {Tag} from "@/types/shelf.ts";
-import {useCreateShelf} from "@/hooks/useShelves.ts";
-import {useNavigate} from "react-router-dom";
+import { useCreateShelf } from "@/hooks/useShelves.ts";
+import { useTags } from "@/hooks/useTags.ts";
+import { useNavigate } from "react-router-dom";
 import AlertDialog from "@/components/AlertDialog";
-import {BookOpen, Check, FileText, Hash, Loader2} from "lucide-react";
+import { BookOpen, Check, FileText, Hash, Loader2, AlertCircle, Plus } from "lucide-react";
 import ReactQuill from "react-quill";
-import 'react-quill/dist/quill.snow.css';
-
-
+import "react-quill/dist/quill.snow.css";
+import { Tag } from "@/types/tag.ts";
+import { CreateTagModal } from "@/components/CreateTagModal";
 export default function CreateShelf() {
-    const tagValues = Object.values(Tag) as Tag[];
-
+    const { tags: tagValues, loading: loadingTags, error: errorTags, handleCreateShelfTag } = useTags();
     const [label, setLabel] = useState("");
     const [description, setDescription] = useState("<p><br></p>");
-    const [tag, setTag] = useState<Tag>(tagValues[0] as Tag);
+    const [tag, setTag] = useState<Tag | null>(null);
     const [success, setSuccess] = useState(false);
     const { handleCreateShelf, loading, error } = useCreateShelf();
     const navigate = useNavigate();
@@ -23,15 +22,32 @@ export default function CreateShelf() {
     const [alertMessage, setAlertMessage] = useState("");
     const [alertState, setAlertState] = useState<"success" | "error">("success");
 
+    const [modalOpen, setModalOpen] = useState(false);
+    const [tagCreationLoading, setTagCreationLoading] = useState(false);
+
+    useEffect(() => {
+        if (!loadingTags && tagValues.length > 0 && !tag) {
+            setTag(tagValues[0]);
+        }
+    }, [loadingTags, tagValues, tag]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!tag) {
+            setAlertMessage("Veuillez sélectionner un tag.");
+            setAlertState("error");
+            setAlertOpen(true);
+            return;
+        }
+
         const createdShelf = await handleCreateShelf({ label, description, tag });
 
         if (createdShelf) {
             setAlertMessage("Étagère créée avec succès !");
             setAlertState("success");
             setAlertOpen(true);
+            setSuccess(true);
         } else if (error) {
             setAlertMessage(error);
             setAlertState("error");
@@ -45,29 +61,59 @@ export default function CreateShelf() {
             navigate("/shelves");
         }
     };
+
+    const handleAddNewTag = async (label: string) => {
+        if (tagValues.find((t) => t.label.toLowerCase() === label.toLowerCase())) {
+            setAlertMessage("Ce tag existe déjà.");
+            setAlertState("error");
+            setAlertOpen(true);
+            return;
+        }
+
+        setTagCreationLoading(true);
+        try {
+            const newTag = await handleCreateShelfTag(label, "SHELF");
+            if (newTag) {
+                setTag(newTag);
+                setModalOpen(false);
+            }
+        } catch {
+            setAlertMessage("Erreur lors de la création du tag.");
+            setAlertState("error");
+            setAlertOpen(true);
+        } finally {
+            setTagCreationLoading(false);
+        }
+    };
+
+    if (loadingTags)
+        return <div className="p-4 text-center">Chargement des tags...</div>;
+
+    if (errorTags)
+        return (
+            <div className="p-4 text-center text-red-600">
+                Erreur lors du chargement des tags : {errorTags}
+            </div>
+        );
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
-            {/* Header avec navigation */}
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-white rounded-lg shadow-sm border">
                         <BookOpen className="text-blue-600" size={20} />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        Créer une nouvelle étagère
-                    </h1>
+                    <h1 className="text-2xl font-bold text-gray-900">Créer une nouvelle étagère</h1>
                 </div>
             </div>
 
-            {/* Carte principale avec hauteur fixe et scroll interne */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden max-w-4xl mx-auto">
-                {/* Contenu principal avec scroll */}
                 <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
                     <div className="space-y-6">
-                        {/* Champ nom */}
+                        {/* Nom */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <Hash size={16}/>
+                                <Hash size={16} />
                                 Nom de l'étagère *
                             </label>
                             <Input
@@ -78,16 +124,15 @@ export default function CreateShelf() {
                                 disabled={loading}
                                 required
                                 className="h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                                maxLength={50}
                             />
-                            <div className="text-xs text-gray-500">
-                                {label.length}/50 caractères
-                            </div>
+                            <div className="text-xs text-gray-500">{label.length}/50 caractères</div>
                         </div>
 
-                        {/* Champ description */}
+                        {/* Description */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <FileText size={16}/>
+                                <FileText size={16} />
                                 Description
                             </label>
                             <ReactQuill
@@ -102,62 +147,53 @@ export default function CreateShelf() {
                             </div>
                         </div>
 
-                        {/* Sélecteur de tag amélioré */}
+                        {/* Tags */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <BookOpen size={16}/>
+                                <BookOpen size={16} />
                                 Tag
                             </label>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                                 {tagValues.map((tagValue) => (
                                     <button
-                                        key={tagValue}
+                                        key={tagValue.id}
                                         type="button"
                                         onClick={() => setTag(tagValue)}
-                                        disabled={loading}
+                                        disabled={loading || loadingTags}
                                         className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 hover:scale-[1.02] ${
-                                            tag === tagValue
+                                            tag?.id === tagValue.id
                                                 ? "border-gray-800 bg-gray-100 shadow-sm"
                                                 : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
                                         }`}
                                     >
-                                        {tagValue}
+                                        {tagValue.label}
                                     </button>
                                 ))}
+
+                                <button
+                                    type="button"
+                                    onClick={() => setModalOpen(true)}
+                                    disabled={loading || loadingTags}
+                                    className="p-3 rounded-lg border-2 text-gray-500 text-xl font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center"
+                                    aria-label="Ajouter un nouveau tag"
+                                >
+                                    <Plus size={24} />
+                                </button>
                             </div>
                         </div>
-
-                        {/* Message d'erreur */}
-                        {error && (
-                            <div
-                                className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                                <AlertCircle size={18}/>
-                                <span className="text-sm font-medium">{error}</span>
-                            </div>
-                        )}
-
-                        {/* Message de succès */}
-                        {success && (
-                            <div
-                                className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-                                <Check size={18}/>
-                                <span className="text-sm font-medium">
-                                    Étagère créée avec succès !
-                                </span>
-                            </div>
-                        )}
                     </div>
                 </div>
 
-                {/* Boutons d'action */}
+                {/* Boutons */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-4">
                     <Button
                         type="button"
                         variant="outline"
                         className="flex-1 h-12 font-medium border-gray-200 hover:bg-gray-50"
                         disabled={loading}
+                        onClick={() => navigate("/shelves")}
                     >
-                    Annuler
+                        Annuler
                     </Button>
                     <Button
                         onClick={handleSubmit}
@@ -179,6 +215,7 @@ export default function CreateShelf() {
                         )}
                     </Button>
                 </div>
+
                 <AlertDialog
                     message={alertMessage}
                     open={alertOpen}
@@ -187,6 +224,13 @@ export default function CreateShelf() {
                     onAnimationEnd={handleAlertAnimationEnd}
                 />
             </div>
+
+            <CreateTagModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                onCreate={handleAddNewTag}
+                loading={tagCreationLoading}
+            />
         </div>
     );
 }

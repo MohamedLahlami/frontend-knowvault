@@ -8,13 +8,15 @@ import {
 import { getPageById, getPagesByChapterId, updatePage } from "@/lib/pageApi";
 import { Page, PageStatus } from "@/types/page";
 import { Button } from "@/components/ui/button";
+import CommentsPanel from "@/components/CommentsPanel";
 import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Edit2,
   Save,
-  X,  Star,
+  X,
+  Star,
   StarOff,
 } from "lucide-react";
 import { marked } from "marked";
@@ -39,6 +41,8 @@ export default function PageDetails() {
   const [markDownContent, setMarkDownContent] = useState<string>("");
   const [isFavorite, setIsFavorite] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsCount, setCommentsCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPageAndPages = async () => {
@@ -63,7 +67,7 @@ export default function PageDetails() {
 
         // Charger les favoris et définir isFavorite
         const favoritesData = await getFavoritesByUser(auth.user.access_token);
-        setIsFavorite(favoritesData.some(fav => fav.pageId === pageData.id));
+        setIsFavorite(favoritesData.some((fav) => fav.pageId === pageData.id));
       } catch (err) {
         console.error("Erreur de chargement :", err);
         setError("Impossible de charger cette page.");
@@ -246,6 +250,16 @@ export default function PageDetails() {
             Télécharger en PDF
           </Button>
         )}
+        {!isEditing && (
+          <Button
+            variant="outline"
+            onClick={() => setCommentsOpen(true)}
+            className="flex items-center gap-2"
+          >
+            Commentaires
+            {typeof commentsCount === "number" ? ` (${commentsCount})` : ""}
+          </Button>
+        )}
       </div>
 
       {isEditing && (
@@ -263,7 +277,9 @@ export default function PageDetails() {
               className="w-full border px-3 py-2 rounded"
               value={status}
               onChange={(e) => setStatus(e.target.value as Page["status"])}
-            > <option value="Draft">Brouillon</option>
+            >
+              {" "}
+              <option value="Draft">Brouillon</option>
               <option value="Published">Publié</option>
               <option value="Archived">Archivé</option>
             </select>
@@ -294,6 +310,13 @@ export default function PageDetails() {
 
       {/* Rendered content with ref for PDF export */}
       {!isEditing && <div ref={contentRef}>{renderContent()}</div>}
+
+      <CommentsPanel
+        pageId={page.id}
+        isOpen={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        onCountChange={(n) => setCommentsCount(n)}
+      />
     </div>
   );
 }

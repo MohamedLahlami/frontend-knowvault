@@ -6,6 +6,8 @@ export interface Shelf {
     description: string;
     tag: Tag;
     bookCount: number;
+    views?: number;
+    imageName?: string;
     createdAt: string;
     updatedAt: string;
 }

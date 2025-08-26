@@ -5,16 +5,15 @@ import { useCreateShelf } from "@/hooks/useShelves.ts";
 import { useTags } from "@/hooks/useTags.ts";
 import { useNavigate } from "react-router-dom";
 import AlertDialog from "@/components/AlertDialog";
-import { BookOpen, Check, FileText, Hash, Loader2, AlertCircle, Plus } from "lucide-react";
-
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Check, FileText, Hash, Loader2, Plus } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { Tag } from "@/types/tag.ts";
 import { CreateTagModal } from "@/components/CreateTagModal";
+
 export default function CreateShelf() {
     const { tags: tagValues, loading: loadingTags, error: errorTags, handleCreateShelfTag } = useTags();
     const [label, setLabel] = useState("");
-    const [description, setDescription] = useState("<p><br></p>");
+    const [description, setDescription] = useState("");
     const [tag, setTag] = useState<Tag | null>(null);
     const [success, setSuccess] = useState(false);
     const { handleCreateShelf, loading, error } = useCreateShelf();
@@ -25,6 +24,10 @@ export default function CreateShelf() {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [tagCreationLoading, setTagCreationLoading] = useState(false);
+
+    // Image
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     useEffect(() => {
         if (!loadingTags && tagValues.length > 0 && !tag) {
@@ -42,7 +45,13 @@ export default function CreateShelf() {
             return;
         }
 
-        const createdShelf = await handleCreateShelf({ label, description, tag });
+        const formData = new FormData();
+        formData.append("label", label);
+        formData.append("description", description);
+        formData.append("tagId", String(tag.id));
+        if (imageFile) formData.append("image", imageFile);
+
+        const createdShelf = await handleCreateShelf(formData);
 
         if (createdShelf) {
             setAlertMessage("Étagère créée avec succès !");
@@ -102,7 +111,7 @@ export default function CreateShelf() {
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-white rounded-lg shadow-sm border">
-                        <BookOpen className="text-blue-600" size={20} />
+                        <Plus className="text-blue-600" size={20} />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Créer une nouvelle étagère</h1>
                 </div>
@@ -111,6 +120,7 @@ export default function CreateShelf() {
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden max-w-4xl mx-auto">
                 <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
                     <div className="space-y-6">
+
                         {/* Nom */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -133,25 +143,58 @@ export default function CreateShelf() {
                         {/* Description */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <FileText size={16} />
+                                <FileText size={16}/>
                                 Description
                             </label>
-                            <ReactQuill
-                                theme="snow"
+                            <Input
+                                type="text"
+                                placeholder="Description..."
                                 value={description}
-                                onChange={setDescription}
-                                className="bg-white"
-                                readOnly={loading}
+                                onChange={(e) => setDescription(e.target.value)}
+                                disabled={loading}
+                                required
+                                className="h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                                maxLength={200}
                             />
-                            <div className="text-xs text-gray-500">
-                                {description.replace(/<[^>]+>/g, "").length}/200 caractères
-                            </div>
+                            <div className="text-xs text-gray-500">{description.length}/200 caractères</div>
+                        </div>
+
+                        {/* Image */}
+                        <div className="space-y-3">
+                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <ImageIcon size={16}/>
+                                Image de couverture
+                            </label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    setImageFile(file);
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = () => setImagePreview(reader.result as string);
+                                        reader.readAsDataURL(file);
+                                    } else {
+                                        setImagePreview(null);
+                                    }
+                                }}
+                                className="border p-2 rounded w-full"
+                                disabled={loading}
+                            />
+                            {imagePreview && (
+                                <img
+                                    src={imagePreview}
+                                    alt="Aperçu"
+                                    className="h-32 w-32 object-cover rounded mt-2"
+                                />
+                            )}
                         </div>
 
                         {/* Tags */}
                         <div className="space-y-3">
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <BookOpen size={16} />
+                                <Plus size={16}/>
                                 Tag
                             </label>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -178,10 +221,11 @@ export default function CreateShelf() {
                                     className="p-3 rounded-lg border-2 text-gray-500 text-xl font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center"
                                     aria-label="Ajouter un nouveau tag"
                                 >
-                                    <Plus size={24} />
+                                    <Plus size={24}/>
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
 

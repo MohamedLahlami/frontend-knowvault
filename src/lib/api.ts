@@ -4,13 +4,12 @@ const API_BASE_URL = 'http://localhost:8081';
 interface ApiRequestOptions extends RequestInit {
   requireAuth?: boolean;
   token?: string;
+  isFormData?: boolean;
 }
 
 class ApiService {
   private getAuthHeaders(token?: string): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+    const headers: Record<string, string> = {};
 
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -20,15 +19,15 @@ class ApiService {
   }
 
   async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: ApiRequestOptions = {}
   ): Promise<T> {
     const { requireAuth = true, token, headers = {}, ...fetchOptions } = options;
-    
+
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     let requestHeaders = { ...headers };
-    
+
     if (requireAuth && token) {
       const authHeaders = this.getAuthHeaders(token);
       requestHeaders = { ...requestHeaders, ...authHeaders };
@@ -44,7 +43,7 @@ class ApiService {
         if (response.status === 401 && requireAuth) {
           throw new Error('Authentication required - please login again');
         }
-        
+
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP Error: ${response.status}`);
       }
@@ -67,20 +66,29 @@ class ApiService {
   }
 
   async post<T>(endpoint: string, data?: any, options?: ApiRequestOptions): Promise<T> {
+    const isFormData = data instanceof FormData;
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: isFormData
+          ? { ...options?.headers } // 🚫 pas de Content-Type ici
+          : { 'Content-Type': 'application/json', ...options?.headers }
     });
   }
 
   async put<T>(endpoint: string, data?: any, options?: ApiRequestOptions): Promise<T> {
+    const isFormData = data instanceof FormData;
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: isFormData
+          ? { ...options?.headers }
+          : { 'Content-Type': 'application/json', ...options?.headers }
     });
   }
+
 
   async delete<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });

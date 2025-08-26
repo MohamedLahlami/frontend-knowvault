@@ -125,15 +125,15 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Étagères avec le plus de livres */}
+                {/* Étagères les plus populaires */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <BookOpen className="h-5 w-5 text-primary" />
-                            Étagères avec le plus de livres
+                            Étagères les plus populaires
                         </CardTitle>
                         <CardDescription>
-                            Collections contenant le plus de livres
+                            Collections les plus consultées
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -150,7 +150,7 @@ export default function Dashboard() {
                                         {shelf.label}
                                     </Link>
                                     <p className="text-sm text-muted-foreground">
-                                        {shelf.bookCount} livre{shelf.bookCount > 1 ? "s" : ""}
+                                        {shelf.views} vue{shelf.views > 1 ? "s" : ""}
                                     </p>
                                 </div>
                                 <span className="px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -195,7 +195,7 @@ export default function Dashboard() {
                             className="h-20 flex-col space-y-2"
                             asChild
                         >
-                            <Link to="/pages/new">
+                            <Link to="/chapters/new">
                                 <Plus className="h-6 w-6" />
                                 <span>Nouvelle page</span>
                             </Link>
@@ -257,7 +257,7 @@ export default function Dashboard() {
                             >
                                 <XAxis type="number" />
                                 <YAxis dataKey="label" type="category" width={100} />
-                                <Tooltip />
+                                <Tooltip formatter={(value) => [`${value}`, "nombre"]} />
                                 <Bar dataKey="value" barSize={20}>
                                     {bookTagData.map((entry, index) => (
                                         <Cell

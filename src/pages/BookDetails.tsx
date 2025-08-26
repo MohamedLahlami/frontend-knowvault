@@ -7,7 +7,10 @@ import { useEffect, useState } from "react";
 import { getBookById } from "@/lib/bookApi";
 import { useAuth } from "react-oidc-context";
 import { EditBookDialog } from "@/components/BookDialog";
-import { Book } from "@/types/book"
+import SummarizeBookDialog from "@/components/SummarizeBookDialog";
+import { Book } from "@/types/book";
+import { getChaptersByBookId } from "@/lib/chapterApi";
+import type { Chapter } from "@/types/chapter";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -17,6 +20,8 @@ export default function BookDetails() {
   const [error, setError] = useState<string | null>(null);
   const auth = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [chaptersLoading, setChaptersLoading] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -32,6 +37,26 @@ export default function BookDetails() {
       }
     };
     if (id && auth.user?.access_token) fetchBook();
+  }, [id, auth.user]);
+
+  useEffect(() => {
+    const fetchChapters = async () => {
+      if (!id || !auth.user?.access_token) return;
+      setChaptersLoading(true);
+      try {
+        const data = await getChaptersByBookId(
+          Number(id),
+          auth.user.access_token
+        );
+        setChapters(data);
+      } catch (err) {
+        // Silently ignore here; main error surface is book load
+        console.error("Erreur lors du chargement des chapitres", err);
+      } finally {
+        setChaptersLoading(false);
+      }
+    };
+    fetchChapters();
   }, [id, auth.user]);
 
   const refetchBook = async () => {
@@ -101,6 +126,36 @@ export default function BookDetails() {
         </CardContent>
       </Card>
 
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Chapitres</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chaptersLoading ? (
+            <div className="text-sm text-muted-foreground">
+              Chargement des chapitres…
+            </div>
+          ) : chapters.length === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              Aucun chapitre trouvé.
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {chapters.map((ch) => (
+                <li key={ch.id} className="text-sm">
+                  <Link
+                    to={`/chapters/${ch.id}`}
+                    className="underline hover:text-foreground"
+                  >
+                    {ch.chapterTitle}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="flex gap-2">
         <Button variant="outline" asChild>
           <Link to="/books">← Retour à la liste</Link>
@@ -114,6 +169,10 @@ export default function BookDetails() {
         <Button variant="default" asChild>
           <Link to={`/shelves/${book.shelfId}`}>Voir l'étagère</Link>
         </Button>
+        <SummarizeBookDialog
+          bookId={book.id}
+          trigger={<Button variant="secondary">Résumer avec l'IA</Button>}
+        />
       </div>
       {editDialogOpen && (
         <EditBookDialog

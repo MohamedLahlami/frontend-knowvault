@@ -5,7 +5,7 @@ import { useAuth } from "react-oidc-context";
 import { Shelf } from "@/types/shelf.ts";
 import {
     createShelf,
-    deleteShelf,
+    deleteShelf, getBooksByShelf,
     getShelfById,
     getShelves,
     updateShelf,
@@ -29,7 +29,7 @@ export const useShelves = () => {
 
         setLoading(true);
         try {
-            const data = await getShelves(auth.user.access_token, pageToFetch, 6);
+            const data = await getShelves(auth.user.access_token, pageToFetch, 3);
             setShelves(data.content);
             setTotalPages(data.totalPages);
             setError(null);
@@ -62,7 +62,7 @@ export const useCreateShelf = () => {
     const [error, setError] = useState<string | null>(null);
 
     const handleCreateShelf = async (
-        shelf: Partial<Shelf>
+        shelfData: Partial<Shelf> | FormData
     ): Promise<Shelf | null> => {
         if (!auth.isAuthenticated || !auth.user) {
             setError("Utilisateur non authentifié");
@@ -71,7 +71,7 @@ export const useCreateShelf = () => {
 
         setLoading(true);
         try {
-            const result = await createShelf(shelf, auth.user.access_token);
+            const result = await createShelf(shelfData, auth.user.access_token);
             return result;
         } catch (err) {
             console.error(err);
@@ -149,7 +149,7 @@ export const useEditShelf = () => {
 
     const handleEditShelf = async (
         id: number,
-        shelfData: Partial<Shelf>
+        shelfData: Partial<Shelf> | FormData
     ): Promise<Shelf | null> => {
         if (!auth.isAuthenticated || !auth.user) {
             setError("Utilisateur non authentifié");
@@ -175,3 +175,40 @@ export const useEditShelf = () => {
 
     return { handleEditShelf, loading, error };
 };
+
+export const useBooksByShelf = (shelfId: number) => {
+    const auth = useAuth();
+    const [books, setBooks] = useState<Book[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!shelfId) return; // éviter les appels invalides
+
+        const fetchBooks = async () => {
+            if (!auth.isAuthenticated || !auth.user) {
+                setError("Utilisateur non authentifié");
+                setLoading(false);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const data = await getBooksByShelf(shelfId, auth.user.access_token);
+                setBooks(data);
+                setError(null);
+            } catch (err) {
+                console.error(err);
+                setError("Erreur lors du chargement des livres");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBooks();
+    }, [auth, shelfId]);
+
+    return { books, loading, error };
+};
+
+

@@ -27,6 +27,7 @@ import CreateShelf from "@/pages/CreateShelf.tsx";
 import EditShelf from "@/pages/EditShelf.tsx";
 import Favoris from "@/pages/Favoris";
 import ChaptersByBook from "./pages/ChapterByBook";
+import ShelfDetails from "@/pages/ShelfDetails.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -92,6 +93,13 @@ const App = () => (
                     element={
                         <ProtectedRoute>
                             <EditShelf />
+                        </ProtectedRoute>
+                    }
+                /><Route
+                    path="/shelves/:id/books"
+                    element={
+                        <ProtectedRoute>
+                            <ShelfDetails />
                         </ProtectedRoute>
                     }
                 />

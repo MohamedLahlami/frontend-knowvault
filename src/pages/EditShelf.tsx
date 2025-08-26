@@ -3,13 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AlertDialog from "@/components/AlertDialog";
-import { BookOpen, Check, FileText, Hash, Loader2 } from "lucide-react";
+import {BookOpen, Check, FileText, Hash, Image as ImageIcon, Loader2, Plus} from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useEditShelf, useGetShelfById } from "@/hooks/useShelves.ts";
 import { useTags } from "@/hooks/useTags.ts";
 import { Tag } from "@/types/tag.ts";
-import {CreateTagModal} from "@/components/CreateTagModal.tsx";
+import { CreateTagModal } from "@/components/CreateTagModal.tsx";
 
 export default function EditShelf() {
     const { id } = useParams<{ id: string }>();
@@ -17,17 +17,15 @@ export default function EditShelf() {
 
     const { shelf, loading: loadingShelf, error: fetchError } = useGetShelfById(Number(id));
     const { handleEditShelf, loading: loadingEdit, error: errorEdit } = useEditShelf();
-
-    const {
-        tags: tagValues,
-        loading: loadingTags,
-        error: errorTags,
-        handleCreateShelfTag,
-    } = useTags();
+    const { tags: tagValues, loading: loadingTags, error: errorTags, handleCreateShelfTag } = useTags();
 
     const [label, setLabel] = useState("");
     const [description, setDescription] = useState("<p><br></p>");
     const [tag, setTag] = useState<Tag | null>(null);
+
+    // Image
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
@@ -36,10 +34,14 @@ export default function EditShelf() {
     const [modalOpen, setModalOpen] = useState(false);
     const [tagCreationLoading, setTagCreationLoading] = useState(false);
 
+    // Initialiser label, description et tag
     useEffect(() => {
         if (shelf) {
             setLabel(shelf.label);
             setDescription(shelf.description || "<p><br></p>");
+            if (shelf.imageName) {
+                setImagePreview(`/api/files/${shelf.imageName}`);
+            }
         }
     }, [shelf]);
 
@@ -64,11 +66,13 @@ export default function EditShelf() {
             return;
         }
 
-        const updatedShelf = await handleEditShelf(Number(id), {
-            label,
-            description,
-            tag,
-        });
+        const formData = new FormData();
+        formData.append("label", label);
+        formData.append("description", description);
+        formData.append("tagId", String(tag.id));
+        if (imageFile) formData.append("image", imageFile);
+
+        const updatedShelf = await handleEditShelf(Number(id), formData);
 
         if (updatedShelf) {
             setAlertMessage("Étagère mise à jour avec succès !");
@@ -153,25 +157,58 @@ export default function EditShelf() {
                     {/* Description */}
                     <div className="space-y-3">
                         <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <FileText size={16} />
+                            <FileText size={16}/>
                             Description
                         </label>
-                        <ReactQuill
-                            theme="snow"
+                        <Input
+                            type="text"
+                            placeholder="Description..."
                             value={description}
-                            onChange={setDescription}
-                            className="bg-white"
-                            readOnly={loadingEdit}
+                            onChange={(e) => setDescription(e.target.value)}
+                            disabled={loadingEdit}
+                            required
+                            className="h-12 text-base border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                            maxLength={200}
                         />
-                        <div className="text-xs text-gray-500">
-                            {description.replace(/<[^>]+>/g, "").length}/200 caractères
-                        </div>
+                        <div className="text-xs text-gray-500">{description.length}/200 caractères</div>
+                    </div>
+
+                    {/* Image */}
+                    <div className="space-y-3">
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <ImageIcon size={16}/>
+                            Image de couverture
+                        </label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                setImageFile(file);
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => setImagePreview(reader.result as string);
+                                    reader.readAsDataURL(file);
+                                } else {
+                                    setImagePreview(null);
+                                }
+                            }}
+                            className="border p-2 rounded w-full"
+                            disabled={loadingEdit}
+                        />
+                        {imagePreview && (
+                            <img
+                                src={imagePreview}
+                                alt="Aperçu"
+                                className="h-32 w-32 object-cover rounded mt-2"
+                            />
+                        )}
                     </div>
 
                     {/* Tags */}
                     <div className="space-y-3">
                         <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                            <BookOpen size={16} />
+                            <Plus size={16} />
                             Tag
                         </label>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -198,7 +235,7 @@ export default function EditShelf() {
                                 className="p-3 rounded-lg border-2 text-gray-500 text-xl font-bold hover:bg-gray-100 transition-all duration-200 flex items-center justify-center"
                                 aria-label="Ajouter un nouveau tag"
                             >
-                                +
+                                <Plus size={24} />
                             </button>
                         </div>
                     </div>

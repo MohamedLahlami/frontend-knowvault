@@ -28,6 +28,7 @@ import EditShelf from "@/pages/EditShelf.tsx";
 import Favoris from "@/pages/Favoris";
 import ChaptersByBook from "./pages/ChapterByBook";
 import ShelfDetails from "@/pages/ShelfDetails.tsx";
+import PublicShelfDetails from "@/pages/PublicShelfDetails.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -45,6 +46,7 @@ const App = () => (
               {/* Public routes - accessible without authentication */}
               <Route path="/public-books" element={<PublicBooks />} />
               <Route path="/public-shelves" element={<PublicShelves />} />
+                <Route path="/public-shelf/:id" element={<PublicShelfDetails />} />
               
               {/* Protected routes - require authentication */}
              

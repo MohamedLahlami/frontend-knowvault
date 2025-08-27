@@ -1,4 +1,4 @@
-import { apiService } from "@/lib/api";
+import api, { apiService } from "@/lib/api";
 import {Shelf} from "@/types/shelf.ts";
 import {PaginatedResponse} from "@/types/pagination.ts";
 import {Book} from "@/types/book.ts";
@@ -54,16 +54,15 @@ export const updateShelf = async (
     );
 };
 
-export const getShelfById = async (id: number, token: string): Promise<Shelf> => {
-    return await apiService.get<Shelf>(`/api/shelf/${id}`, {
-        requireAuth: true,
-        token: token,
-    });
+export const getShelfById = async (id: number): Promise<Shelf> => {
+    return await apiService.get<Shelf>(`/api/shelf/${id}`);
 };
 
-export const getBooksByShelf = async (id: number, token: string): Promise<Book[]> => {
-    return await apiService.get<Book[]>(`/api/shelf/${id}/books`, {
-        requireAuth: true,
-        token: token,
-    });
+export const getBooksByShelf = async (id: number): Promise<Book[]> => {
+    return await apiService.get<Book[]>(`/api/shelf/${id}/books`);
+};
+
+export const getShelvesPublic = async () => {
+    const res = await apiService.get("/api/shelf/public");
+    return res;
 };

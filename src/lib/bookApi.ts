@@ -112,3 +112,8 @@ export const getBookById = async (
     token,
   });
 };
+
+export const getBooksPublic = async () => {
+  const res = await apiService.get("/api/book/public");
+  return res;
+};

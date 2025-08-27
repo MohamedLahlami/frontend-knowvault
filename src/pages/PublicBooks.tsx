@@ -1,164 +1,76 @@
-import { useState } from "react";
-import { Book, Search, Eye, Calendar, User } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Book as BookIcon, Search, Calendar, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-
-// Mock data for public books
-const publicBooks = [
-  {
-    id: 1,
-    title: "Guide d'introduction à KnowVault",
-    description: "Un guide complet pour découvrir toutes les fonctionnalités de KnowVault.",
-    author: "Équipe KnowVault",
-    lastUpdated: "Il y a 2 jours",
-    tags: ["Guide", "Introduction", "Documentation"],
-    isPublic: true,
-    views: 245,
-    cover: "/api/placeholder/200/300"
-  },
-  {
-    id: 2,
-    title: "Documentation technique",
-    description: "Documentation technique détaillée pour les développeurs.",
-    author: "Équipe technique",
-    lastUpdated: "Il y a 1 semaine",
-    tags: ["Technique", "API", "Développement"],
-    isPublic: true,
-    views: 156,
-    cover: "/api/placeholder/200/300"
-  },
-  {
-    id: 3,
-    title: "Manuel utilisateur",
-    description: "Manuel complet d'utilisation de la plateforme les IAMs.",
-    author: "Support KnowVault",
-    lastUpdated: "Il y a 3 jours",
-    tags: ["Manuel", "Utilisateur", "Guide"],
-    isPublic: true,
-    views: 89,
-    cover: "/api/placeholder/200/300"
-  }
-];
+import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { getBooksPublic } from "@/lib/bookApi"; // <-- ton API
+import { Book } from "@/types/book";
+import {BookCard} from "@/components/BookCard.tsx"; // <-- type de Book
 
 export default function PublicBooks() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
-  const filteredBooks = publicBooks.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         book.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTag = !selectedTag || book.tags.includes(selectedTag);
-    return matchesSearch && matchesTag;
-  });
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const data = await getBooksPublic(); // backend renvoie Book[]
+      setBooks(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("Erreur lors du chargement des livres publics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const allTags = Array.from(new Set(publicBooks.flatMap(book => book.tags)));
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const filteredBooks = books.filter(
+      (book) =>
+          book.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (book.description ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return <div className="p-6">Chargement des livres...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Book className="h-8 w-8 text-primary" />
-          Bibliothèque publique
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+          <BookIcon className="h-8 w-8 text-primary"/>
+          Livres publics
         </h1>
-        <p className="text-muted-foreground">
-          Explorez notre collection de livres et guides disponibles publiquement.
-        </p>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <div className="relative mb-6 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
           <Input
-            placeholder="Rechercher des livres..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+              placeholder="Rechercher un livre..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
           />
         </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedTag === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedTag(null)}
-          >
-            Tous
-          </Button>
-          {allTags.map(tag => (
-            <Button
-              key={tag}
-              variant={selectedTag === tag ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedTag(tag)}
-            >
-              {tag}
-            </Button>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {books.map((book) => (
+              <BookCard key={book.id} book={book}/>
           ))}
         </div>
-      </div>
 
-      {/* Books Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredBooks.map((book) => (
-          <Card key={book.id} className="group hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="pb-4">
-              <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-4 flex items-center justify-center">
-                <Book className="h-12 w-12 text-primary/40" />
-              </div>
-              <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                {book.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {book.description}
+        {filteredBooks.length === 0 && (
+            <div className="text-center py-12">
+              <BookIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4"/>
+              <h3 className="text-lg font-medium mb-2">Aucun livre trouvé</h3>
+              <p className="text-muted-foreground">
+                Essayez de modifier vos critères de recherche.
               </p>
-              
-              <div className="flex flex-wrap gap-1">
-                {book.tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <User className="h-3 w-3" />
-                  <span>{book.author}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3" />
-                  <span>{book.lastUpdated}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Eye className="h-3 w-3" />
-                  <span>{book.views} vues</span>
-                </div>
-              </div>
-              
-              <Button className="w-full" variant="outline">
-                <Book className="h-4 w-4 mr-2" />
-                Lire
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+        )}
       </div>
-
-      {filteredBooks.length === 0 && (
-        <div className="text-center py-12">
-          <Book className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">Aucun livre trouvé</h3>
-          <p className="text-muted-foreground">
-            Essayez de modifier vos critères de recherche.
-          </p>
-        </div>
-      )}
-    </div>
   );
-} 
+}

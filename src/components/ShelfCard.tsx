@@ -40,7 +40,13 @@ export function ShelfCard({ shelf, onEdit, onDelete, onClick }: ShelfCardProps) 
     return (
         <div className="relative group">
             <Card className="hover:shadow-xl transition-shadow cursor-pointer"
-                  onClick={() => handleShelfClick(shelf.id)}>
+                  onClick={() => {
+                      if (onClick) {
+                          onClick(shelf.id);
+                      } else {
+                          handleShelfClick(shelf.id);
+                      }
+                  }}>
                 <CardHeader className="pb-4">
                     <div className="aspect-[4/3] rounded-lg mb-4 overflow-hidden relative">
                         {shelf.imageName ? (

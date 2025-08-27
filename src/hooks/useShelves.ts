@@ -7,7 +7,7 @@ import {
     createShelf,
     deleteShelf, getBooksByShelf,
     getShelfById,
-    getShelves,
+    getShelves, getShelvesPublic,
     updateShelf,
 } from "@/lib/shelfApi.ts";
 
@@ -21,25 +21,30 @@ export const useShelves = () => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const fetchShelves = async (pageToFetch = page) => {
-        if (!auth.isAuthenticated || !auth.user) {
-            setError("Utilisateur non authentifié");
-            setLoading(false);
-            return;
-        }
-
         setLoading(true);
         try {
-            const data = await getShelves(auth.user.access_token, pageToFetch, 3);
-            setShelves(data.content);
-            setTotalPages(data.totalPages);
+            let data;
+
+            // Si l'utilisateur est connecté, utiliser l'API privée
+            if (auth.isAuthenticated && auth.user) {
+                data = await getShelves(auth.user.access_token, pageToFetch, 3);
+                setShelves(data.content);
+                setTotalPages(data.totalPages);
+            } else {
+                // Sinon, récupérer les étagères publiques sans token
+                const publicShelves = await getShelvesPublic();
+                setShelves(publicShelves);
+                setTotalPages(1); // pas de pagination côté public
+            }
+
             setError(null);
         } catch (err) {
-            setError("Erreur lors du chargement des étagères");
             console.error(err);
+            setError("Erreur lors du chargement des étagères");
         } finally {
             setLoading(false);
         }
-    };
+    }
 
     useEffect(() => {
         fetchShelves(page);
@@ -194,7 +199,7 @@ export const useBooksByShelf = (shelfId: number) => {
 
             setLoading(true);
             try {
-                const data = await getBooksByShelf(shelfId, auth.user.access_token);
+                const data = await getBooksByShelf(shelfId);
                 setBooks(data);
                 setError(null);
             } catch (err) {

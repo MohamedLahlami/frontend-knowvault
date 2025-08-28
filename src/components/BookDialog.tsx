@@ -201,10 +201,6 @@ export function CreateBookDialog({
               </p>
             )}
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Auteur</label>
-            <Input value={form.author} readOnly disabled />
-          </div>
           <DialogFooter>
             <Button
               type="submit"
@@ -362,7 +358,7 @@ export function EditBookDialog({
             <Button
               type="submit"
               disabled={loading || shelvesLoading}
-              className="w-full"
+              className="w-full bg-accent hover:bg-accent/90 disabled:bg-accent/50"
             >
               {loading ? "Modification..." : "Modifier"}
             </Button>

@@ -221,12 +221,12 @@ export default function Books() {
       </div>
       {/* Liste des livres */}
       {!loading && !error && (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.length > 0 ? (
             books.map((book) => (
               <Card
                 key={book.id}
-                className="hover:shadow-md transition-all duration-200"
+                className="hover:shadow-md transition-all duration-200 h-full"
               >
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -289,12 +289,6 @@ export default function Books() {
                         <Trash className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Link
-                      to={`/shelves/${book.shelfId}`}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      Voir l'étagère →
-                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -321,33 +315,33 @@ export default function Books() {
               />
             </div>
           )}
-          {/* Pagination controls and total count at the bottom */}
-          <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
-            <span className="text-sm text-muted-foreground">
-              {totalElements} livres trouvés
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                className="px-3 py-1 border rounded disabled:opacity-50"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0 || loading}
-              >
-                Précédent
-              </button>
-              <span className="text-sm">
-                Page {page + 1} sur {totalPages}
-              </span>
-              <button
-                className="px-3 py-1 border rounded disabled:opacity-50"
-                onClick={() => setPage(page + 1)}
-                disabled={page + 1 >= totalPages || loading}
-              >
-                Suivant
-              </button>
-            </div>
-          </div>
         </div>
       )}
+      {/* Pagination controls and total count at the bottom */}
+      <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
+        <span className="text-sm text-muted-foreground">
+          {totalElements} livres trouvés
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage(page - 1)}
+            disabled={page === 0 || loading}
+          >
+            Précédent
+          </button>
+          <span className="text-sm">
+            Page {page + 1} sur {totalPages}
+          </span>
+          <button
+            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage(page + 1)}
+            disabled={page + 1 >= totalPages || loading}
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

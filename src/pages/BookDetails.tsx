@@ -11,6 +11,7 @@ import SummarizeBookDialog from "@/components/SummarizeBookDialog";
 import { Book } from "@/types/book";
 import { getChaptersByBookId } from "@/lib/chapterApi";
 import type { Chapter } from "@/types/chapter";
+import { Sparkles } from "lucide-react";
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -171,7 +172,11 @@ export default function BookDetails() {
         </Button>
         <SummarizeBookDialog
           bookId={book.id}
-          trigger={<Button variant="secondary">Résumer avec l'IA</Button>}
+          trigger={
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Sparkles className="h-4 w-4 mr-2" /> Résumer avec l'IA
+            </Button>
+          }
         />
       </div>
       {editDialogOpen && (

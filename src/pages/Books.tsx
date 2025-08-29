@@ -246,15 +246,22 @@ export default function Books() {
                         <CardDescription className="text-sm max-w-2xl">
                           {book.description}
                         </CardDescription>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Auteur: {book.utilisateurLogin}</span>
-                          <Badge variant="secondary">
-                            Étagère : <ShelfLabel shelfId={book.shelfId} />
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground mt-2">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">Auteur:</span>
+                            <span>{book.utilisateurLogin}</span>
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 px-2 py-1"
+                          >
+                            <span className="font-medium">Étagère:</span>
+                            <ShelfLabel shelfId={book.shelfId} />
                           </Badge>
-                          <span className="flex items-center gap-1">
+                          <div className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            {book.createdAt?.slice(0, 10)}
-                          </span>
+                            <span>{book.createdAt?.slice(0, 10)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>

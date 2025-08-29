@@ -132,7 +132,7 @@ export default function Chapters() {
       {/* Affichage groupé par livre */}
       {chaptersByBook.map(({ book, chapters }) => (
         <div key={book.id} className="space-y-4">
-          <h2 className="text-2xl font-semibold text-primary">
+          <h2 className="text-2xl font-semibold text-green-600">
             <br />
             {book.bookTitle}
           </h2>
@@ -147,7 +147,7 @@ export default function Chapters() {
                   key={chapter.id}
                   className="hover:shadow-md transition-all duration-200 h-full flex flex-col relative"
                 >
-                  <div className="absolute top-5 right-8 bg-primary text-white px-3 py-1 rounded-full text-sm font-bold z-10 shadow">
+                  <div className="absolute top-5 right-8 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold z-10 shadow">
                     {pageCount} pages
                   </div>
                   <CardHeader className="flex-grow">

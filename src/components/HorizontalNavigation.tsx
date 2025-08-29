@@ -63,7 +63,7 @@ export function HorizontalNavigation() {
   return (
     <div className="w-full bg-card border-b">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ backgroundColor: "#f0fdf4" }}>
         <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img 
             src={norsysLogo} 
@@ -71,8 +71,8 @@ export function HorizontalNavigation() {
             className="h-8 w-auto"
           />
           <div className="w-px h-6 bg-border" />
-          <BookOpen className="h-6 w-6 text-primary" />
-          <h1 className="font-bold text-lg text-primary">KnowVault</h1>
+          <BookOpen className="h-6 w-6 text-green-600" />
+          <h1 className="font-bold text-lg text-green-600">KnowVault</h1>
         </Link>
         
         <div className="flex items-center gap-4">

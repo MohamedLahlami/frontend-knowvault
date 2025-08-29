@@ -62,7 +62,7 @@ export const getBooksByShelf = async (id: number): Promise<Book[]> => {
     return await apiService.get<Book[]>(`/api/shelf/${id}/books`);
 };
 
-export const getShelvesPublic = async () => {
-    const res = await apiService.get("/api/shelf/public");
-    return res;
+export const getShelvesPublic = async (): Promise<Shelf[]> => {
+  const res = await apiService.get<Shelf[]>("/api/shelf/public");
+  return res;
 };

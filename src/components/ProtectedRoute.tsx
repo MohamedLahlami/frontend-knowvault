@@ -46,7 +46,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           
           <Button 
             onClick={() => auth.signinRedirect()} 
-            className="w-full flex items-center gap-2"
+            className="w-full bg-green-600 flex items-center gap-2"
             size="lg"
           >
             <LogIn className="h-4 w-4" />

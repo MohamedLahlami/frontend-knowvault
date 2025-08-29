@@ -27,7 +27,7 @@ export const useShelves = () => {
 
             // Si l'utilisateur est connecté, utiliser l'API privée
             if (auth.isAuthenticated && auth.user) {
-                data = await getShelves(auth.user.access_token, pageToFetch, 3);
+                data = await getShelves(auth.user.access_token, pageToFetch, 1000);
                 setShelves(data.content);
                 setTotalPages(data.totalPages);
             } else {

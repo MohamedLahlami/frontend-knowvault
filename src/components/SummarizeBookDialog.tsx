@@ -26,10 +26,7 @@ import { getPagesByChapterId } from "@/lib/pageApi";
 import type { Chapter } from "@/types/chapter";
 import type { Page } from "@/types/page";
 import { useToast } from "@/components/ui/use-toast";
-<<<<<<< HEAD
 import { Sparkles } from "lucide-react";
-=======
->>>>>>> 6f5602025305d99cb6d9bf104e5f4a208d892410
 
 interface SummarizeBookDialogProps {
   bookId: number;
@@ -150,21 +147,6 @@ export function SummarizeBookDialog({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="col-span-1 space-y-4">
-<<<<<<< HEAD
-=======
-            <p className="text-xs text-muted-foreground">
-              input language is set to {language},{" "}
-              <button
-                type="button"
-                className="underline hover:text-foreground"
-                onClick={() =>
-                  setLanguage(language === "english" ? "french" : "english")
-                }
-              >
-                change to {language === "english" ? "french" : "english"}
-              </button>
-            </p>
->>>>>>> 6f5602025305d99cb6d9bf104e5f4a208d892410
             <div>
               <Label>Langue</Label>
               <Select value={language} onValueChange={setLanguage}>
@@ -209,8 +191,6 @@ export function SummarizeBookDialog({
             </div>
             <div className="flex gap-2">
               <Button
-<<<<<<< HEAD
-=======
                 variant="outline"
                 onClick={handleSummarize}
                 disabled={!canSummarize || loading}
@@ -218,7 +198,6 @@ export function SummarizeBookDialog({
                 {loading ? "Génération..." : "Résumer"}
               </Button>
               <Button
->>>>>>> 6f5602025305d99cb6d9bf104e5f4a208d892410
                 variant="secondary"
                 onClick={() => setSummary("")}
                 disabled={loading}
@@ -253,7 +232,6 @@ export function SummarizeBookDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Fermer
           </Button>
-<<<<<<< HEAD
           <Button
             className="bg-purple-600 hover:bg-purple-700 text-white"
             onClick={handleSummarize}
@@ -266,10 +244,6 @@ export function SummarizeBookDialog({
                 <Sparkles className="h-4 w-4 mr-2" /> Résumer avec l'IA
               </span>
             )}
-=======
-          <Button onClick={handleSummarize} disabled={!canSummarize || loading}>
-            {loading ? "Génération..." : "Résumer avec l'IA"}
->>>>>>> 6f5602025305d99cb6d9bf104e5f4a208d892410
           </Button>
         </DialogFooter>
       </DialogContent>

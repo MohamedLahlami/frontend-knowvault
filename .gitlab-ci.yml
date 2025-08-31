@@ -84,21 +84,14 @@ deploy:
     - echo "Docker image built and pushed successfully!"
     - echo "Image tag: $DOCKER_TAG"
     - echo "Registry: $CI_REGISTRY_IMAGE"
-
-    # If you have a deployment server, you could add commands like:
-    # - ssh user@server "docker pull $CI_REGISTRY_IMAGE:$DOCKER_TAG"
-    # - ssh user@server "docker stop knowvault-frontend || true"
-    # - ssh user@server "docker run -d -p 80:80 --name knowvault-frontend $CI_REGISTRY_IMAGE:$DOCKER_TAG"
-
-    # For now, just show successful completion
     - echo "✅ Deployment completed successfully!"
   rules:
     # Only deploy from main branch
     - if: $CI_COMMIT_BRANCH == "main"
   environment:
     name: production
-    url: http://your-domain.com # Replace with your actual domain
-  when: manual # Require manual trigger for deployment
+    url: http://your-domain.com
+  when: manual
 
 # Optional: Cleanup old images (runs weekly)
 cleanup:
@@ -107,7 +100,6 @@ cleanup:
   script:
     - echo "Cleaning up old Docker images..."
     - echo "This would remove images older than 30 days"
-    # Add cleanup commands here if needed
   rules:
     # Run on schedule only
     - if: $CI_PIPELINE_SOURCE == "schedule"

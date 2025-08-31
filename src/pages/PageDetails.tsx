@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   useParams,
   Link,
@@ -78,6 +78,18 @@ export default function PageDetails() {
     fetchPageAndPages();
   }, [pageId, auth.user]);
 
+  const handleDownloadPDF = useCallback(() => {
+    if (!contentRef.current) return;
+    const opt = {
+      margin: 0.5,
+      filename: `page-${page?.pageNumber || "document"}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+    };
+    html2pdf().set(opt).from(contentRef.current).save();
+  }, [page?.pageNumber]);
+
   // Auto-export PDF if URL contains export=pdf parameter
   useEffect(() => {
     if (
@@ -92,7 +104,15 @@ export default function PageDetails() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [page, isEditing, loading, searchParams]);
+  }, [
+    page,
+    isEditing,
+    loading,
+    searchParams,
+    handleDownloadPDF,
+    navigate,
+    pageId,
+  ]);
 
   const currentIndex = chapterPages.findIndex((p) => p.id === Number(pageId));
   const prevPage = currentIndex > 0 ? chapterPages[currentIndex - 1] : null;
@@ -143,17 +163,6 @@ export default function PageDetails() {
     } catch (err) {
       console.error("Erreur lors du toggle favori :", err);
     }
-  };
-  const handleDownloadPDF = () => {
-    if (!contentRef.current) return;
-    const opt = {
-      margin: 0.5,
-      filename: `page-${page?.pageNumber || "document"}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-    };
-    html2pdf().set(opt).from(contentRef.current).save();
   };
 
   const renderContent = () => {

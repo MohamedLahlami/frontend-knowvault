@@ -1,5 +1,5 @@
 //api.ts
-const API_BASE_URL = 'http://localhost:8081';
+const API_BASE_URL = "http://localhost:8081";
 
 interface ApiRequestOptions extends RequestInit {
   requireAuth?: boolean;
@@ -22,7 +22,12 @@ class ApiService {
     endpoint: string,
     options: ApiRequestOptions = {}
   ): Promise<T> {
-    const { requireAuth = true, token, headers = {}, ...fetchOptions } = options;
+    const {
+      requireAuth = true,
+      token,
+      headers = {},
+      ...fetchOptions
+    } = options;
 
     const url = `${API_BASE_URL}${endpoint}`;
 
@@ -36,12 +41,12 @@ class ApiService {
     try {
       const response = await fetch(url, {
         ...fetchOptions,
-        headers: requestHeaders
+        headers: requestHeaders,
       });
 
       if (!response.ok) {
         if (response.status === 401 && requireAuth) {
-          throw new Error('Authentication required - please login again');
+          throw new Error("Authentication required - please login again");
         }
 
         const errorData = await response.json().catch(() => ({}));
@@ -49,7 +54,10 @@ class ApiService {
       }
 
       // Handle empty responses
-      if (response.status === 204 || response.headers.get('content-length') === '0') {
+      if (
+        response.status === 204 ||
+        response.headers.get("content-length") === "0"
+      ) {
         return {} as T;
       }
 
@@ -62,46 +70,57 @@ class ApiService {
 
   // Convenience methods
   async get<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'GET' });
+    return this.request<T>(endpoint, { ...options, method: "GET" });
   }
 
-  async post<T>(endpoint: string, data?: any, options?: ApiRequestOptions): Promise<T> {
+  async post<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: ApiRequestOptions
+  ): Promise<T> {
     const isFormData = data instanceof FormData;
     return this.request<T>(endpoint, {
       ...options,
-      method: 'POST',
+      method: "POST",
       body: isFormData ? data : data ? JSON.stringify(data) : undefined,
       headers: isFormData
-          ? { ...options?.headers } // 🚫 pas de Content-Type ici
-          : { 'Content-Type': 'application/json', ...options?.headers }
+        ? { ...options?.headers } // 🚫 pas de Content-Type ici
+        : { "Content-Type": "application/json", ...options?.headers },
     });
   }
 
-  async put<T>(endpoint: string, data?: any, options?: ApiRequestOptions): Promise<T> {
+  async put<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: ApiRequestOptions
+  ): Promise<T> {
     const isFormData = data instanceof FormData;
     return this.request<T>(endpoint, {
       ...options,
-      method: 'PUT',
+      method: "PUT",
       body: isFormData ? data : data ? JSON.stringify(data) : undefined,
       headers: isFormData
-          ? { ...options?.headers }
-          : { 'Content-Type': 'application/json', ...options?.headers }
+        ? { ...options?.headers }
+        : { "Content-Type": "application/json", ...options?.headers },
     });
   }
-
 
   async delete<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+    return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
 
-  async patch<T>(endpoint: string, data?: any, options?: ApiRequestOptions): Promise<T> {
+  async patch<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: ApiRequestOptions
+  ): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
-      method: 'PATCH',
+      method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 }
 
 export const apiService = new ApiService();
-export default apiService; 
+export default apiService;

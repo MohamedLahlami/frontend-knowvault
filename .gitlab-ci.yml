@@ -82,8 +82,6 @@ deploy:
     # Example deployment commands (customize based on your setup)
     - echo "Deploying KnowVault Frontend..."
     - echo "Docker image built and pushed successfully!"
-    - echo "Image tag: $DOCKER_TAG"
-    - echo "Registry: $CI_REGISTRY_IMAGE"
     - echo "✅ Deployment completed successfully!"
   rules:
     # Only deploy from main branch

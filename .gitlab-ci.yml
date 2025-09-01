@@ -11,12 +11,14 @@ variables:
   DOCKER_IMAGE_NAME: "knowvault-frontend"
   DOCKER_TAG: "${CI_COMMIT_SHORT_SHA}"
   DOCKER_LATEST_TAG: "latest"
-
-  # Docker in Docker configuration
+  
+  # Docker in Docker configuration - Fixed for better compatibility
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: "/certs"
-
-# Lint stage - Check code quality (non-blocking)
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+  # Disable TLS for better compatibility with older runners
+  DOCKER_TLS_VERIFY: ""
+  DOCKER_CERT_PATH: ""# Lint stage - Check code quality (non-blocking)
 lint:
   stage: lint
   image: node:18-alpine
@@ -49,10 +51,16 @@ lint:
 # Build stage - Creates Docker image
 build:
   stage: build
-  image: docker:20.10.16
+  image: docker:24.0.5
   services:
-    - docker:20.10.16-dind
+    - docker:24.0.5-dind
+  variables:
+    # Override global settings for this job
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
   before_script:
+    # Wait for docker to be ready
+    - until docker info; do sleep 1; done
     # Login to GitLab Container Registry
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
@@ -107,18 +115,20 @@ cleanup:
 # Uncomment the section below if you prefer a single-stage pipeline
 # ===================================
 
-# Simple Build & Deploy (All-in-one):
-# deploy_simple:
+# Alternative simpler pipeline - Uncomment if the main build fails
+# build_simple:
 #   stage: build
-#   image: docker:20.10.16
+#   image: docker:latest
 #   services:
-#     - docker:20.10.16-dind
+#     - docker:dind
+#   variables:
+#     DOCKER_TLS_CERTDIR: ""
+#     DOCKER_HOST: tcp://docker:2375
 #   before_script:
+#     - docker info
 #     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 #   script:
-#     # Build and push in one step
 #     - docker build --target production -t $CI_REGISTRY_IMAGE:latest .
 #     - docker push $CI_REGISTRY_IMAGE:latest
-#     - echo "✅ KnowVault Frontend deployed successfully!"
 #   rules:
 #     - if: $CI_COMMIT_BRANCH == "main"

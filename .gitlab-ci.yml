@@ -48,27 +48,21 @@ lint:
     expire_in: 1 week
     when: always
 
-# Build stage - Creates Docker image
+# Build stage - Simple and reliable approach
 build:
   stage: build
-  image: docker:24.0.5
+  image: docker:latest
   services:
-    - docker:24.0.5-dind
+    - docker:dind
   variables:
-    # Override global settings for this job
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
   before_script:
-    # Wait for docker to be ready
-    - until docker info; do sleep 1; done
-    # Login to GitLab Container Registry
+    - docker info
     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
   script:
-    # Build the production Docker image
-    - docker build --target production -t $CI_REGISTRY_IMAGE:$DOCKER_TAG -t $CI_REGISTRY_IMAGE:$DOCKER_LATEST_TAG .
-    # Push both tags to registry
-    - docker push $CI_REGISTRY_IMAGE:$DOCKER_TAG
-    - docker push $CI_REGISTRY_IMAGE:$DOCKER_LATEST_TAG
+    - docker build --target production -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
   rules:
     # Run on main branch and merge requests
     - if: $CI_COMMIT_BRANCH == "main"
@@ -78,6 +72,7 @@ build:
       # Store build information
       dotenv: build.env
     expire_in: 1 week
+    when: always
 
 # Deploy stage - Simple deployment (can be customized based on your infrastructure)
 deploy:
@@ -110,25 +105,3 @@ cleanup:
     # Run on schedule only
     - if: $CI_PIPELINE_SOURCE == "schedule"
   when: manual
-# ===================================
-# Alternative simplified pipeline
-# Uncomment the section below if you prefer a single-stage pipeline
-# ===================================
-
-# Alternative simpler pipeline - Uncomment if the main build fails
-# build_simple:
-#   stage: build
-#   image: docker:latest
-#   services:
-#     - docker:dind
-#   variables:
-#     DOCKER_TLS_CERTDIR: ""
-#     DOCKER_HOST: tcp://docker:2375
-#   before_script:
-#     - docker info
-#     - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-#   script:
-#     - docker build --target production -t $CI_REGISTRY_IMAGE:latest .
-#     - docker push $CI_REGISTRY_IMAGE:latest
-#   rules:
-#     - if: $CI_COMMIT_BRANCH == "main"

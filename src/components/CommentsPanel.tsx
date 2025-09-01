@@ -48,7 +48,13 @@ export const CommentsPanel: React.FC<CommentsPanelProps> = ({
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const preferredUsername: string | undefined = (auth.user as any)
+  interface AuthUser {
+    preferred_username?: string;
+    access_token: string;
+    // add other properties as needed
+  }
+
+  const preferredUsername: string | undefined = (auth.user as AuthUser)
     ?.preferred_username;
 
   const canDelete = (c: CommentDTO) =>

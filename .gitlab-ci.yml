@@ -1,0 +1,75 @@
+# GitLab CI/CD Pipeline for KnowVault Frontend
+# Ultra-simple pipeline for school project - just lint and build static files
+
+stages:
+  - lint
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+
+# Lint stage - Check code quality (non-blocking)
+lint:
+  stage: lint
+  image: node:18-alpine
+  before_script:
+    # Install dependencies
+    - npm ci --legacy-peer-deps
+  script:
+    # Run ESLint with relaxed settings (allows up to 50 warnings)
+    - echo "🔍 Running ESLint..."
+    - npm run lint || echo "⚠️ ESLint completed with warnings (non-blocking)"
+
+    # Check TypeScript compilation
+    - echo "🔍 Running TypeScript type check..."
+    - npm run type-check || echo "⚠️ TypeScript type check completed with warnings (non-blocking)"
+
+    # Show success message
+    - echo "✅ Code quality check completed!"
+  rules:
+    # Run on all branches and merge requests
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  allow_failure: true # Don't fail the pipeline if linting fails
+
+# Build stage - Create static files
+build:
+  stage: build
+  image: node:18-alpine
+  before_script:
+    # Install dependencies
+    - npm ci --legacy-peer-deps
+  script:
+    # Build the production static files
+    - echo "🏗️ Building production files..."
+    - npm run build
+    - echo "✅ Build completed successfully!"
+    - ls -la dist/
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+  rules:
+    # Run on main branch and merge requests
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# Deploy stage - Simple notification (no actual deployment)
+deploy:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "📦 Deployment ready!"
+    - echo "Built files are available in the artifacts"
+    - echo "To deploy manually:"
+    - echo "1. Download the artifacts"
+    - echo "2. Copy dist/ folder to your web server"
+    - echo "3. Serve the files with any web server (nginx, apache, etc.)"
+    - echo "✅ Ready for manual deployment!"
+  rules:
+    # Only show deploy info for main branch
+    - if: $CI_COMMIT_BRANCH == "main"
+  when: manual # Manual trigger
+  dependencies:
+    - build

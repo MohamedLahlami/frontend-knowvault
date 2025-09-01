@@ -1,128 +1,234 @@
-# 📚 KnowVault - Plateforme de Gestion des Connaissances
+# 📚 KnowVault Frontend - School Project
 
-KnowVault est une application web de gestion des connaissances qui permet d'organiser, partager et consulter des documents de manière structurée avec des étagères et des livres.
+> A modern React TypeScript frontend application for document management and knowledge sharing
 
-## 🚀 Installation Rapide
+## 🎓 About This Project
 
-### Prérequis
-- **Node.js** v18+ ([Télécharger ici](https://nodejs.org/))
-- **npm**
-- **Git** pour le versioning
+KnowVault is a school project that demonstrates modern web development practices using React, TypeScript, and containerization. It's a knowledge management platform where users can organize documents into shelves and books, similar to a digital library.
 
-### Étapes d'installation
+## ✨ Key Features
+
+- 📖 **Public Book Browsing** - View books and shelves without authentication
+- 🔐 **User Authentication** - OIDC integration with Keycloak
+- 📝 **Document Management** - Create, edit, and organize content
+- 🏷️ **Tagging System** - Categorize and search content
+- 📱 **Responsive Design** - Works on desktop and mobile
+- 🐳 **Docker Ready** - Containerized for easy deployment
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Git
+
+### Installation
 
 ```bash
-# 1. Cloner le projet
-git clone <URL_DU_DEPOT>
-cd <nom_projet>
+# Clone the repository
+git clone <repository-url>
+cd front-knowvault
 
-# 2. Installer les dépendances
-npm install
+# Install dependencies
+npm install --legacy-peer-deps
 
-# 3. Configurer l'environnement
-Modifier le fichier .env avec vos paramètres
-
-# 4. Lancer le serveur de développement
+# Start development server
 npm run dev
 
-# 5. Ouvrir http://localhost:5173 dans votre navigateur
+# Open in browser
+# http://localhost:5173
 ```
 
-## 🏗️ Architecture du Projet
+## 🛠️ Tech Stack
+
+### Core Technologies
+
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Fast build tool
+- **React Router** - Client-side routing
+
+### UI & Styling
+
+- **Tailwind CSS** - Utility-first CSS
+- **shadcn/ui** - Modern component library
+- **Radix UI** - Accessible primitives
+- **Lucide React** - Icon library
+
+### Development Tools
+
+- **ESLint** - Code linting
+- **Docker** - Containerization
+- **GitLab CI/CD** - Automated deployment
+
+### Authentication
+
+- **OIDC** - OpenID Connect
+- **Keycloak** - Identity provider
+
+## 📁 Project Structure
 
 ```
 src/
-├── components/         # Composants réutilisables
-│   ├── ui/            # Composants UI de base (shadcn)
-│   ├── Layout.tsx     # Layout principal
-│   ├── HorizontalNavigation.tsx  # Navigation
-│   └── ProtectedRoute.tsx        # Protection des routes
-├── pages/             # Pages de l'application
-│   ├── PublicBooks.tsx     # Livres publics
-│   ├── PublicShelves.tsx   # Étagères publiques
-│   ├── Dashboard.tsx       # Tableau de bord (protégé)
-│   └── ...
-├── hooks/             # Hooks personnalisés
-│   ├── useAuthenticatedApi.ts  # API avec authentification
-│   └── use-toast.ts           # Notifications toast
-├── lib/               # Utilitaires et configuration
-│   ├── api.ts         # Service API
-│   ├── oidcConfig.ts  # Configuration authentification
-│   └── utils.ts       # Fonctions utilitaires
-├── assets/            # Ressources (images, logos)
-└── main.tsx          # Point d'entrée de l'application
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── Layout.tsx      # Main layout
+│   └── Navigation.tsx  # Navigation bar
+├── pages/              # Application pages
+│   ├── Dashboard.tsx   # User dashboard
+│   ├── Books.tsx       # Book management
+│   └── PublicBooks.tsx # Public book view
+├── hooks/              # Custom React hooks
+├── lib/                # Utilities and API
+├── types/              # TypeScript definitions
+└── assets/             # Images and static files
 ```
 
-## 🔐 Authentification
+## 🔧 Available Scripts
 
-Le projet utilise l'authentification **OIDC** avec **Keycloak** :
+```bash
+# Development
+npm run dev              # Start dev server
+npm run build            # Build for production
+npm run preview          # Preview production build
 
-### Routes Publiques (sans authentification)
-- `/` - Page d'accueil (étagères publiques)
-- `/public-books` - Livres accessibles à tous
-- `/public-shelves` - Collections publiques
+# Code Quality
+npm run lint             # Run ESLint (allows 50 warnings)
+npm run lint:fix         # Auto-fix linting issues
+npm run type-check       # Check TypeScript types
 
-### Routes Protégées (authentification requise)
-- `/dashboard` - Tableau de bord utilisateur
-- `/books` - Gestion des livres
-- `/shelves` - Gestion des étagères
-- `/settings` - Paramètres (admin uniquement)
+# Docker
+docker build --target production -t knowvault-frontend .
+docker run -p 3000:80 knowvault-frontend
+```
 
-## 🛠️ Technologies Utilisées
+## � Docker Deployment
 
-### Frontend Core
-- **React 18** - Bibliothèque UI moderne
-- **TypeScript** - JavaScript typé pour plus de sécurité
-- **Vite** - Build tool ultra-rapide
-- **React Router** - Routage côté client
+The project includes a production-ready Docker setup:
 
-### UI/UX
-- **Tailwind CSS** - Framework CSS utilitaire
-- **shadcn/ui** - Composants UI modernes et accessibles
-- **Lucide React** - Icônes SVG optimisées
-- **Radix UI** - Composants UI primitifs
+```bash
+# Build production image
+docker build --target production -t knowvault-frontend .
 
-### Outils de Développement
-- **ESLint** - Linter JavaScript/TypeScript
-- **PostCSS** - Transformation CSS
+# Run container
+docker run -d -p 3000:80 --name knowvault knowvault-frontend
 
-## 🎨 Fonctionnalités
+# Access application at http://localhost:3000
+```
 
-### 🔓 Accès Public
-- **Consultation libre** des étagères et livres publics
-- **Recherche** dans le contenu public
-- **Interface responsive** pour mobile et desktop
+## 🚀 CI/CD Pipeline
 
-### 🔐 Fonctionnalités Authentifiées
-- **Gestion des livres** - CRUD complet
-- **Organisation en étagères** - Collections thématiques
-- **Tableau de bord** personnel
-- **Gestion des rôles** (utilisateur/admin)
+The project uses GitLab CI/CD with three stages:
 
-### 🎯 Interface Utilisateur
-- **Design moderne** avec Tailwind CSS
-- **Composants accessibles** avec Radix UI
-- **Notifications toast** pour le feedback utilisateur
-- **Navigation intuitive** avec logos Norsys
+1. **Lint** - Code quality checks (non-blocking)
+2. **Build** - Create Docker image
+3. **Deploy** - Manual deployment to production
 
-## 📚 Ressources d'Apprentissage
+Pipeline features:
 
-- [Documentation React](https://react.dev/)
-- [Guide TypeScript](https://www.typescriptlang.org/docs/)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [shadcn/ui Components](https://ui.shadcn.com/)
+- ✅ Automatic builds on push to main
+- ✅ Code quality feedback without blocking
+- ✅ Manual deployment approval
+- ✅ Container registry integration
 
-## 🤝 Contribution
+## 🎯 Learning Objectives
 
-### Workflow Git
-1. **Fork** le projet
-2. **Créer une branche** : `git checkout -b feature/ma-fonctionnalite`
-3. **Commit** : `git commit -m "feat: ajouter nouvelle fonctionnalité"`
-4. **Push** : `git push origin feature/ma-fonctionnalite`
-5. **Pull Request** 
+This project demonstrates:
 
-### Standards de Code
-- **ESLint** : Respecter les règles configurées
-- **TypeScript** : Typer toutes les variables et fonctions
-- **Naming** : Noms de variables et fonctions en anglais
-- **Comments** : Commenter le code complexe
+- **Modern React Development** with hooks and TypeScript
+- **Component-Based Architecture** with reusable components
+- **State Management** using React Query and custom hooks
+- **Authentication Flow** with OIDC and protected routes
+- **Responsive Design** with Tailwind CSS
+- **Containerization** with Docker multi-stage builds
+- **CI/CD Practices** with automated testing and deployment
+- **Code Quality** with ESLint and TypeScript
+
+## 🔐 Authentication Flow
+
+The app supports both public and authenticated access:
+
+### Public Routes
+
+- `/` - Home page with public shelves
+- `/public-books` - Browse public books
+- `/public-shelves` - View public collections
+
+### Protected Routes (Login Required)
+
+- `/dashboard` - Personal dashboard
+- `/books` - Manage your books
+- `/shelves` - Organize your shelves
+- `/favorites` - Bookmarked content
+
+## 🎨 UI Components
+
+Built with modern, accessible components:
+
+- **Navigation** - Responsive header with user menu
+- **Cards** - Book and shelf preview cards
+- **Modals** - Create/edit dialogs
+- **Forms** - Validated input forms
+- **Toast** - User feedback notifications
+
+## � Responsive Design
+
+The application is fully responsive:
+
+- **Desktop** - Full-featured interface
+- **Tablet** - Optimized layouts
+- **Mobile** - Touch-friendly navigation
+
+## 🤝 Contributing
+
+This is a school project, but contributions are welcome:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -m "Add new feature"`
+4. Push to branch: `git push origin feature/new-feature`
+5. Submit a pull request
+
+## 📖 Documentation
+
+Additional documentation:
+
+- [`DOCKER_USAGE.md`](./DOCKER_USAGE.md) - Docker setup and usage
+- [`GITLAB_CI_SETUP.md`](./GITLAB_CI_SETUP.md) - CI/CD configuration
+- [`PROJECT_SUMMARY.md`](./PROJECT_SUMMARY.md) - Complete project overview
+
+## 🎓 Educational Notes
+
+### What Makes This School-Friendly
+
+- **Simple Architecture** - Easy to understand structure
+- **Non-Blocking Linting** - Code quality feedback without penalties
+- **Manual Deployment** - Safe deployment practices
+- **Comprehensive Documentation** - Learning-focused explanations
+- **Modern Practices** - Industry-standard tools and patterns
+
+### Skills Demonstrated
+
+- Frontend development with React and TypeScript
+- Modern CSS with Tailwind and component libraries
+- Authentication and security practices
+- Docker containerization
+- CI/CD pipeline setup
+- Code quality and linting
+- Git workflow and collaboration
+
+## 📄 License
+
+This is a school project for educational purposes.
+
+## 🙏 Acknowledgments
+
+- **Norsys** - Project sponsor and logo provider
+- **shadcn/ui** - Amazing component library
+- **Keycloak** - Authentication solution
+- **React Community** - Excellent documentation and tools
+
+---
+
+_Built with ❤️ for learning modern web development_

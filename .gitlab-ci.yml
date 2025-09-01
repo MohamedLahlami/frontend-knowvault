@@ -1,5 +1,5 @@
 # GitLab CI/CD Pipeline for KnowVault Frontend
-# Simple pipeline for school project - lints, builds and deploys Docker image
+# Ultra-simple pipeline for school project - just lint and build static files
 
 stages:
   - lint
@@ -7,18 +7,9 @@ stages:
   - deploy
 
 variables:
-  # Docker image configuration
-  DOCKER_IMAGE_NAME: "knowvault-frontend"
-  DOCKER_TAG: "${CI_COMMIT_SHORT_SHA}"
-  DOCKER_LATEST_TAG: "latest"
-  
-  # Docker in Docker configuration - Fixed for better compatibility
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: tcp://docker:2375
-  # Disable TLS for better compatibility with older runners
-  DOCKER_TLS_VERIFY: ""
-  DOCKER_CERT_PATH: ""# Lint stage - Check code quality (non-blocking)
+  NODE_VERSION: "18"
+
+# Lint stage - Check code quality (non-blocking)
 lint:
   stage: lint
   image: node:18-alpine
@@ -41,67 +32,44 @@ lint:
     - if: $CI_COMMIT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   allow_failure: true # Don't fail the pipeline if linting fails
-  artifacts:
-    reports:
-      # Store lint results for review (optional)
-      dotenv: lint.env
-    expire_in: 1 week
-    when: always
 
-# Build stage - Simple and reliable approach
+# Build stage - Create static files
 build:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
+  image: node:18-alpine
   before_script:
-    - docker info
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    # Install dependencies
+    - npm ci --legacy-peer-deps
   script:
-    - docker build --target production -t $CI_REGISTRY_IMAGE:latest .
-    - docker push $CI_REGISTRY_IMAGE:latest
+    # Build the production static files
+    - echo "🏗️ Building production files..."
+    - npm run build
+    - echo "✅ Build completed successfully!"
+    - ls -la dist/
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
   rules:
     # Run on main branch and merge requests
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  artifacts:
-    reports:
-      # Store build information
-      dotenv: build.env
-    expire_in: 1 week
-    when: always
 
-# Deploy stage - Simple deployment (can be customized based on your infrastructure)
+# Deploy stage - Simple notification (no actual deployment)
 deploy:
   stage: deploy
   image: alpine:latest
-  before_script:
-    # Install curl for health checks
-    - apk add --no-cache curl
   script:
-    # Example deployment commands (customize based on your setup)
-    - echo "Deploying KnowVault Frontend..."
-    - echo "Docker image built and pushed successfully!"
-    - echo "✅ Deployment completed successfully!"
+    - echo "📦 Deployment ready!"
+    - echo "Built files are available in the artifacts"
+    - echo "To deploy manually:"
+    - echo "1. Download the artifacts"
+    - echo "2. Copy dist/ folder to your web server"
+    - echo "3. Serve the files with any web server (nginx, apache, etc.)"
+    - echo "✅ Ready for manual deployment!"
   rules:
-    # Only deploy from main branch
+    # Only show deploy info for main branch
     - if: $CI_COMMIT_BRANCH == "main"
-  environment:
-    name: production
-    url: http://your-domain.com
-  when: manual
-
-# Optional: Cleanup old images (runs weekly)
-cleanup:
-  stage: deploy
-  image: alpine:latest
-  script:
-    - echo "Cleaning up old Docker images..."
-    - echo "This would remove images older than 30 days"
-  rules:
-    # Run on schedule only
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-  when: manual
+  when: manual # Manual trigger
+  dependencies:
+    - build
